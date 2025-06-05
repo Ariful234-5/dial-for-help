@@ -31,15 +31,23 @@ import {
 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
+type LanguageKey = 'bn' | 'en';
+type ServiceCategory = 'electrician' | 'plumber' | 'cleaner' | 'acRepair' | 'painter' | 'carpenter';
+type StatusKey = 'active' | 'inactive' | 'pending' | 'suspended' | 'approved' | 'rejected';
+
+interface TextContent {
+  [key: string]: string;
+}
+
 const AdminDashboard = () => {
-  const [language] = useState('bn');
+  const [language] = useState<LanguageKey>('bn');
   const [searchTerm, setSearchTerm] = useState('');
   const [userFilter, setUserFilter] = useState('all');
   const [providerFilter, setProviderFilter] = useState('all');
   const [reportFilter, setReportFilter] = useState('all');
   const { toast } = useToast();
 
-  const text = {
+  const text: Record<LanguageKey, TextContent> = {
     bn: {
       dashboard: 'অ্যাডমিন ড্যাশবোর্ড',
       overview: 'সংক্ষিপ্ত বিবরণ',
@@ -154,6 +162,34 @@ const AdminDashboard = () => {
       painter: 'Painter',
       carpenter: 'Carpenter'
     }
+  };
+
+  const getTranslation = (key: string): string => {
+    return text[language][key] || key;
+  };
+
+  const getCategoryTranslation = (category: string): string => {
+    const categoryMap: Record<string, string> = {
+      electrician: getTranslation('electrician'),
+      plumber: getTranslation('plumber'),
+      cleaner: getTranslation('cleaner'),
+      acRepair: getTranslation('acRepair'),
+      painter: getTranslation('painter'),
+      carpenter: getTranslation('carpenter')
+    };
+    return categoryMap[category] || category;
+  };
+
+  const getStatusTranslation = (status: string): string => {
+    const statusMap: Record<string, string> = {
+      active: getTranslation('active'),
+      inactive: getTranslation('inactive'),
+      pending: getTranslation('pending'),
+      suspended: getTranslation('suspended'),
+      approved: getTranslation('approved'),
+      rejected: getTranslation('rejected')
+    };
+    return statusMap[status] || status;
   };
 
   const [dashboardStats] = useState({
@@ -296,7 +332,7 @@ const AdminDashboard = () => {
 
   const stats = [
     {
-      title: text[language].totalUsers,
+      title: getTranslation('totalUsers'),
       value: dashboardStats.totalUsers.toLocaleString(),
       icon: Users,
       color: 'text-blue-600',
@@ -304,7 +340,7 @@ const AdminDashboard = () => {
       change: `+${dashboardStats.monthlyGrowth}% এই মাসে`
     },
     {
-      title: text[language].activeProviders,
+      title: getTranslation('activeProviders'),
       value: dashboardStats.activeProviders.toString(),
       icon: UserCheck,
       color: 'text-green-600',
@@ -312,7 +348,7 @@ const AdminDashboard = () => {
       change: '+12 নতুন এই মাসে'
     },
     {
-      title: text[language].pendingApprovals,
+      title: getTranslation('pendingApprovals'),
       value: dashboardStats.pendingApprovals.toString(),
       icon: AlertTriangle,
       color: 'text-yellow-600',
@@ -320,7 +356,7 @@ const AdminDashboard = () => {
       change: 'পর্যালোচনার প্রয়োজন'
     },
     {
-      title: text[language].totalRevenue,
+      title: getTranslation('totalRevenue'),
       value: `৳${dashboardStats.totalRevenue.toLocaleString()}`,
       icon: DollarSign,
       color: 'text-purple-600',
@@ -349,17 +385,17 @@ const AdminDashboard = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">{text[language].dashboard}</h1>
+              <h1 className="text-3xl font-bold text-gray-800">{getTranslation('dashboard')}</h1>
               <p className="text-gray-600 mt-2">সিস্টেম পরিচালনা এবং নিয়ন্ত্রণ কেন্দ্র</p>
             </div>
             <div className="flex items-center space-x-4">
               <Button variant="outline" onClick={() => handleSystemAction('তথ্য রিফ্রেশ')}>
                 <RefreshCw className="w-4 h-4 mr-2" />
-                {text[language].refreshData}
+                {getTranslation('refreshData')}
               </Button>
               <Button variant="outline">
                 <Settings className="w-4 h-4 mr-2" />
-                {text[language].settings}
+                {getTranslation('settings')}
               </Button>
             </div>
           </div>
@@ -386,11 +422,11 @@ const AdminDashboard = () => {
 
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">{text[language].overview}</TabsTrigger>
-            <TabsTrigger value="users">{text[language].users}</TabsTrigger>
-            <TabsTrigger value="providers">{text[language].providers}</TabsTrigger>
-            <TabsTrigger value="reports">{text[language].reports}</TabsTrigger>
-            <TabsTrigger value="analytics">{text[language].analytics}</TabsTrigger>
+            <TabsTrigger value="overview">{getTranslation('overview')}</TabsTrigger>
+            <TabsTrigger value="users">{getTranslation('users')}</TabsTrigger>
+            <TabsTrigger value="providers">{getTranslation('providers')}</TabsTrigger>
+            <TabsTrigger value="reports">{getTranslation('reports')}</TabsTrigger>
+            <TabsTrigger value="analytics">{getTranslation('analytics')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -401,7 +437,7 @@ const AdminDashboard = () => {
                     <CardTitle>সাম্প্রতিক কার্যক্রম</CardTitle>
                     <Button variant="outline" size="sm">
                       <Eye className="w-4 h-4 mr-2" />
-                      {text[language].viewAll}
+                      {getTranslation('viewAll')}
                     </Button>
                   </div>
                 </CardHeader>
@@ -421,7 +457,7 @@ const AdminDashboard = () => {
                         </div>
                         <div className="text-right">
                           <Badge variant={user.status === 'active' ? 'secondary' : 'outline'}>
-                            {user.status === 'active' ? text[language].active : text[language].inactive}
+                            {getStatusTranslation(user.status)}
                           </Badge>
                           <p className="text-sm text-gray-600 mt-1">{user.totalBookings} বুকিং</p>
                         </div>
@@ -441,7 +477,7 @@ const AdminDashboard = () => {
                       <div key={provider.id} className="p-3 border rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <p className="font-medium text-sm">{provider.name}</p>
-                          <Badge variant="outline">{text[language][provider.category as keyof typeof text[typeof language]]}</Badge>
+                          <Badge variant="outline">{getCategoryTranslation(provider.category)}</Badge>
                         </div>
                         <p className="text-xs text-gray-600 mb-3">{provider.location} • {provider.experience}</p>
                         <div className="flex space-x-2">
@@ -451,7 +487,7 @@ const AdminDashboard = () => {
                             onClick={() => handleProviderAction(provider.id, 'অনুমোদন')}
                           >
                             <CheckCircle className="w-3 h-3 mr-1" />
-                            {text[language].approve}
+                            {getTranslation('approve')}
                           </Button>
                           <Button 
                             size="sm" 
@@ -460,7 +496,7 @@ const AdminDashboard = () => {
                             onClick={() => handleProviderAction(provider.id, 'প্রত্যাখ্যান')}
                           >
                             <XCircle className="w-3 h-3 mr-1" />
-                            {text[language].reject}
+                            {getTranslation('reject')}
                           </Button>
                         </div>
                       </div>
@@ -483,7 +519,7 @@ const AdminDashboard = () => {
                       onClick={() => handleReportGeneration('ব্যবহারকারী রিপোর্ট')}
                     >
                       <FileText className="w-4 h-4 mr-2" />
-                      {text[language].generateReport}
+                      {getTranslation('generateReport')}
                     </Button>
                     <Button 
                       variant="outline" 
@@ -492,7 +528,7 @@ const AdminDashboard = () => {
                       onClick={() => handleSystemAction('তথ্য রপ্তানি')}
                     >
                       <Download className="w-4 h-4 mr-2" />
-                      {text[language].exportData}
+                      {getTranslation('exportData')}
                     </Button>
                     <Button 
                       variant="outline" 
@@ -501,7 +537,7 @@ const AdminDashboard = () => {
                       onClick={() => handleSystemAction('ব্যাকআপ তৈরি')}
                     >
                       <Shield className="w-4 h-4 mr-2" />
-                      {text[language].backupData}
+                      {getTranslation('backupData')}
                     </Button>
                     <Button 
                       variant="outline" 
@@ -510,7 +546,7 @@ const AdminDashboard = () => {
                       onClick={() => handleSystemAction('সিস্টেম সেটিংস')}
                     >
                       <Settings className="w-4 h-4 mr-2" />
-                      {text[language].systemSettings}
+                      {getTranslation('systemSettings')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -522,11 +558,11 @@ const AdminDashboard = () => {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>{text[language].userManagement}</CardTitle>
+                  <CardTitle>{getTranslation('userManagement')}</CardTitle>
                   <div className="flex items-center space-x-2">
                     <Button variant="outline" size="sm" onClick={() => handleSystemAction('ব্যবহারকারী রপ্তানি')}>
                       <Download className="w-4 h-4 mr-2" />
-                      {text[language].exportData}
+                      {getTranslation('exportData')}
                     </Button>
                   </div>
                 </div>
@@ -547,9 +583,9 @@ const AdminDashboard = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">সব ব্যবহারকারী</SelectItem>
-                      <SelectItem value="active">{text[language].active}</SelectItem>
-                      <SelectItem value="inactive">{text[language].inactive}</SelectItem>
-                      <SelectItem value="suspended">{text[language].suspended}</SelectItem>
+                      <SelectItem value="active">{getTranslation('active')}</SelectItem>
+                      <SelectItem value="inactive">{getTranslation('inactive')}</SelectItem>
+                      <SelectItem value="suspended">{getTranslation('suspended')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -557,14 +593,14 @@ const AdminDashboard = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>{text[language].name}</TableHead>
-                      <TableHead>{text[language].email}</TableHead>
-                      <TableHead>{text[language].phone}</TableHead>
-                      <TableHead>{text[language].location}</TableHead>
-                      <TableHead>{text[language].status}</TableHead>
+                      <TableHead>{getTranslation('name')}</TableHead>
+                      <TableHead>{getTranslation('email')}</TableHead>
+                      <TableHead>{getTranslation('phone')}</TableHead>
+                      <TableHead>{getTranslation('location')}</TableHead>
+                      <TableHead>{getTranslation('status')}</TableHead>
                       <TableHead>বুকিং</TableHead>
-                      <TableHead>{text[language].joinDate}</TableHead>
-                      <TableHead>{text[language].actions}</TableHead>
+                      <TableHead>{getTranslation('joinDate')}</TableHead>
+                      <TableHead>{getTranslation('actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -576,7 +612,7 @@ const AdminDashboard = () => {
                         <TableCell>{user.location}</TableCell>
                         <TableCell>
                           <Badge variant={user.status === 'active' ? 'secondary' : 'outline'}>
-                            {user.status === 'active' ? text[language].active : text[language].inactive}
+                            {getStatusTranslation(user.status)}
                           </Badge>
                         </TableCell>
                         <TableCell>{user.totalBookings}</TableCell>
@@ -595,7 +631,7 @@ const AdminDashboard = () => {
                               variant="outline"
                               onClick={() => handleUserAction(user.id, user.status === 'active' ? 'স্থগিত' : 'সক্রিয়')}
                             >
-                              {user.status === 'active' ? text[language].suspend : text[language].activate}
+                              {user.status === 'active' ? getTranslation('suspend') : getTranslation('activate')}
                             </Button>
                           </div>
                         </TableCell>
@@ -611,11 +647,11 @@ const AdminDashboard = () => {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>{text[language].providerManagement}</CardTitle>
+                  <CardTitle>{getTranslation('providerManagement')}</CardTitle>
                   <div className="flex items-center space-x-2">
                     <Button variant="outline" size="sm" onClick={() => handleSystemAction('প্রদানকারী রপ্তানি')}>
                       <Download className="w-4 h-4 mr-2" />
-                      {text[language].exportData}
+                      {getTranslation('exportData')}
                     </Button>
                   </div>
                 </div>
@@ -636,10 +672,10 @@ const AdminDashboard = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">সব প্রদানকারী</SelectItem>
-                      <SelectItem value="active">{text[language].active}</SelectItem>
-                      <SelectItem value="inactive">{text[language].inactive}</SelectItem>
-                      <SelectItem value="suspended">{text[language].suspended}</SelectItem>
-                      <SelectItem value="pending">{text[language].pending}</SelectItem>
+                      <SelectItem value="active">{getTranslation('active')}</SelectItem>
+                      <SelectItem value="inactive">{getTranslation('inactive')}</SelectItem>
+                      <SelectItem value="suspended">{getTranslation('suspended')}</SelectItem>
+                      <SelectItem value="pending">{getTranslation('pending')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -647,14 +683,14 @@ const AdminDashboard = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>{text[language].name}</TableHead>
-                      <TableHead>{text[language].email}</TableHead>
-                      <TableHead>{text[language].category}</TableHead>
-                      <TableHead>{text[language].location}</TableHead>
-                      <TableHead>{text[language].rating}</TableHead>
-                      <TableHead>{text[language].completedJobs}</TableHead>
-                      <TableHead>{text[language].status}</TableHead>
-                      <TableHead>{text[language].actions}</TableHead>
+                      <TableHead>{getTranslation('name')}</TableHead>
+                      <TableHead>{getTranslation('email')}</TableHead>
+                      <TableHead>{getTranslation('category')}</TableHead>
+                      <TableHead>{getTranslation('location')}</TableHead>
+                      <TableHead>{getTranslation('rating')}</TableHead>
+                      <TableHead>{getTranslation('completedJobs')}</TableHead>
+                      <TableHead>{getTranslation('status')}</TableHead>
+                      <TableHead>{getTranslation('actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -664,7 +700,7 @@ const AdminDashboard = () => {
                         <TableCell>{provider.email}</TableCell>
                         <TableCell>
                           <Badge variant="outline">
-                            {text[language][provider.category as keyof typeof text[typeof language]]}
+                            {getCategoryTranslation(provider.category)}
                           </Badge>
                         </TableCell>
                         <TableCell>{provider.location}</TableCell>
@@ -680,7 +716,7 @@ const AdminDashboard = () => {
                             provider.status === 'active' ? 'secondary' : 
                             provider.status === 'suspended' ? 'destructive' : 'outline'
                           }>
-                            {text[language][provider.status as keyof typeof text[typeof language]]}
+                            {getStatusTranslation(provider.status)}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -700,8 +736,8 @@ const AdminDashboard = () => {
                                 provider.status === 'suspended' ? 'সক্রিয়' : 'অনুমোদন'
                               )}
                             >
-                              {provider.status === 'active' ? text[language].suspend : 
-                               provider.status === 'suspended' ? text[language].activate : text[language].approve}
+                              {provider.status === 'active' ? getTranslation('suspend') : 
+                               provider.status === 'suspended' ? getTranslation('activate') : getTranslation('approve')}
                             </Button>
                           </div>
                         </TableCell>
@@ -717,7 +753,7 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>{text[language].systemReports}</CardTitle>
+                  <CardTitle>{getTranslation('systemReports')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <Button 
@@ -798,7 +834,7 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>{text[language].performanceAnalytics}</CardTitle>
+                  <CardTitle>{getTranslation('performanceAnalytics')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-80 flex items-center justify-center bg-gray-50 rounded-md border border-dashed border-gray-300">
