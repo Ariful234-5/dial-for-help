@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, UserCheck, Clock, TrendingUp, AlertTriangle, Shield, CheckCircle, XCircle } from 'lucide-react';
+import { Users, UserCheck, Clock, TrendingUp, AlertTriangle, Shield, CheckCircle, XCircle, Download, RefreshCw } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
   const [language] = useState('bn');
+  const { toast } = useToast();
 
   const text = {
     bn: {
@@ -93,17 +95,7 @@ const AdminDashboard = () => {
     }
   ]);
 
-  const handleApproval = (id: number, action: 'approve' | 'reject') => {
-    setPendingProviders(prev => 
-      prev.map(provider => 
-        provider.id === id 
-          ? { ...provider, status: action === 'approve' ? 'approved' : 'rejected' }
-          : provider
-      )
-    );
-  };
-
-  const userList = [
+  const [userList, setUserList] = useState([
     {
       id: 1,
       name: 'রহিম উদ্দিন',
@@ -122,7 +114,73 @@ const AdminDashboard = () => {
       status: 'active',
       totalBookings: 8
     }
-  ];
+  ]);
+
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+
+  const handleApproval = (id: number, action: 'approve' | 'reject') => {
+    setPendingProviders(prev => 
+      prev.map(provider => 
+        provider.id === id 
+          ? { ...provider, status: action === 'approve' ? 'approved' : 'rejected' }
+          : provider
+      )
+    );
+    
+    toast({
+      title: action === 'approve' ? 'Provider Approved' : 'Provider Rejected',
+      description: `Provider has been ${action === 'approve' ? 'approved' : 'rejected'} successfully.`,
+    });
+  };
+
+  const handleUserAction = (userId: number, action: 'block' | 'activate') => {
+    setUserList(prev => 
+      prev.map(user => 
+        user.id === userId 
+          ? { ...user, status: action === 'block' ? 'blocked' : 'active' }
+          : user
+      )
+    );
+    
+    toast({
+      title: action === 'block' ? 'User Blocked' : 'User Activated',
+      description: `User has been ${action === 'block' ? 'blocked' : 'activated'} successfully.`,
+    });
+  };
+
+  const handleManageUsers = () => {
+    toast({
+      title: 'User Management',
+      description: 'Opening user management interface...',
+    });
+  };
+
+  const handleViewAllProviders = () => {
+    toast({
+      title: 'Provider Management',
+      description: 'Opening provider management interface...',
+    });
+  };
+
+  const handleGenerateReport = async () => {
+    setIsGeneratingReport(true);
+    
+    // Simulate report generation
+    setTimeout(() => {
+      setIsGeneratingReport(false);
+      toast({
+        title: 'Report Generated',
+        description: 'Analytics report has been generated and downloaded.',
+      });
+    }, 3000);
+  };
+
+  const handleGenerateAnalytics = () => {
+    toast({
+      title: 'Analytics Dashboard',
+      description: 'Loading comprehensive analytics data...',
+    });
+  };
 
   const recentActivities = [
     {
@@ -263,16 +321,36 @@ const AdminDashboard = () => {
                     <Badge className="bg-green-100 text-green-800">Fast</Badge>
                   </div>
                   <div className="space-y-3 mt-4">
-                    <Button className="w-full justify-start" variant="outline" size="sm">
+                    <Button 
+                      className="w-full justify-start" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleManageUsers}
+                    >
                       <UserCheck className="w-4 h-4 mr-2" />
                       {text[language].manageUsers}
                     </Button>
-                    <Button className="w-full justify-start" variant="outline" size="sm">
+                    <Button 
+                      className="w-full justify-start" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleViewAllProviders}
+                    >
                       <Shield className="w-4 h-4 mr-2" />
                       {text[language].viewAllProviders}
                     </Button>
-                    <Button className="w-full justify-start" variant="outline" size="sm">
-                      <TrendingUp className="w-4 h-4 mr-2" />
+                    <Button 
+                      className="w-full justify-start" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleGenerateReport}
+                      disabled={isGeneratingReport}
+                    >
+                      {isGeneratingReport ? (
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <TrendingUp className="w-4 h-4 mr-2" />
+                      )}
                       {text[language].generateReport}
                     </Button>
                   </div>
@@ -383,7 +461,11 @@ const AdminDashboard = () => {
                             <Button size="sm" variant="outline">
                               View
                             </Button>
-                            <Button size="sm" variant={user.status === 'active' ? 'destructive' : 'default'}>
+                            <Button 
+                              size="sm" 
+                              variant={user.status === 'active' ? 'destructive' : 'default'}
+                              onClick={() => handleUserAction(user.id, user.status === 'active' ? 'block' : 'activate')}
+                            >
                               {user.status === 'active' ? 'Block' : 'Activate'}
                             </Button>
                           </div>
@@ -408,7 +490,7 @@ const AdminDashboard = () => {
                       <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-600 mb-2">Analytics Dashboard</h3>
                       <p className="text-gray-500 mb-4">Platform performance data and charts will be displayed here</p>
-                      <Button>Generate Analytics</Button>
+                      <Button onClick={handleGenerateAnalytics}>Generate Analytics</Button>
                     </div>
                   </div>
                 </CardContent>

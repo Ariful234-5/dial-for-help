@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,15 +5,26 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { Calendar, Clock, DollarSign, Star, MessageCircle, Settings, User, TrendingUp, Shield } from 'lucide-react';
+import { Calendar, Clock, DollarSign, Star, MessageCircle, Settings, User, TrendingUp, Shield, CheckCircle, Phone, MapPin } from 'lucide-react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 const ProviderDashboard = () => {
   const [language] = useState('bn');
   const [isAvailable, setIsAvailable] = useState(true);
+  const [profileData, setProfileData] = useState({
+    name: 'রহিম উদ্দিন',
+    email: 'rahim@example.com',
+    phone: '+880 1234 567890',
+    location: 'ধানমন্ডি, ঢাকা',
+    bio: 'বৈদ্যুতিক সার্ভিসিং এবং ইনস্টলেশনের ৮ বছরের অভিজ্ঞতা আছে। সব ধরনের ইলেকট্রিক্যাল কাজে দক্ষ।',
+    category: 'electrician',
+    priceRange: '৳৫০০-১৫০০'
+  });
+  const { toast } = useToast();
 
   const text = {
     bn: {
@@ -174,6 +184,63 @@ const ProviderDashboard = () => {
     { month: 'Jun', amount: 32000 }
   ];
 
+  const handleAvailabilityChange = (checked: boolean) => {
+    setIsAvailable(checked);
+    toast({
+      title: 'Availability Updated',
+      description: `You are now ${checked ? 'available' : 'unavailable'} for bookings.`,
+    });
+  };
+
+  const handleBookingAction = (bookingId: number, action: 'complete' | 'view') => {
+    if (action === 'complete') {
+      toast({
+        title: 'Booking Completed',
+        description: 'Booking has been marked as completed successfully.',
+      });
+    } else {
+      toast({
+        title: 'Booking Details',
+        description: 'Opening booking details...',
+      });
+    }
+  };
+
+  const handleProfileSave = () => {
+    toast({
+      title: 'Profile Updated',
+      description: 'Your profile information has been saved successfully.',
+    });
+  };
+
+  const handleServiceUpdate = () => {
+    toast({
+      title: 'Services Updated',
+      description: 'Your service settings have been updated successfully.',
+    });
+  };
+
+  const handleQuickAction = (action: string) => {
+    const actionMessages = {
+      schedule: 'Opening your schedule...',
+      earnings: 'Generating earnings report...',
+      profile: 'Opening profile editor...',
+      settings: 'Opening account settings...'
+    };
+    
+    toast({
+      title: 'Quick Action',
+      description: actionMessages[action as keyof typeof actionMessages] || 'Action performed',
+    });
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setProfileData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -190,7 +257,7 @@ const ProviderDashboard = () => {
                 </span>
                 <Switch 
                   checked={isAvailable} 
-                  onCheckedChange={setIsAvailable}
+                  onCheckedChange={handleAvailabilityChange}
                 />
                 <span className={`text-sm font-medium ${
                   isAvailable ? 'text-green-600' : 'text-red-600'
@@ -263,19 +330,35 @@ const ProviderDashboard = () => {
                   <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => handleQuickAction('schedule')}
+                  >
                     <Calendar className="w-4 h-4 mr-2" />
                     View Schedule
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => handleQuickAction('earnings')}
+                  >
                     <TrendingUp className="w-4 h-4 mr-2" />
                     Earnings Report
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => handleQuickAction('profile')}
+                  >
                     <User className="w-4 h-4 mr-2" />
                     Update Profile
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => handleQuickAction('settings')}
+                  >
                     <Settings className="w-4 h-4 mr-2" />
                     Account Settings
                   </Button>
@@ -315,11 +398,20 @@ const ProviderDashboard = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            <Button size="sm" variant="outline">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleBookingAction(booking.id, 'view')}
+                            >
                               View Details
                             </Button>
                             {booking.status !== 'completed' && (
-                              <Button size="sm" variant="default" className="bg-green-600 hover:bg-green-700">
+                              <Button 
+                                size="sm" 
+                                variant="default" 
+                                className="bg-green-600 hover:bg-green-700"
+                                onClick={() => handleBookingAction(booking.id, 'complete')}
+                              >
                                 Complete
                               </Button>
                             )}
@@ -424,32 +516,53 @@ const ProviderDashboard = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <Label htmlFor="name">Name</Label>
-                      <Input id="name" value="রহিম উদ্দিন" className="mt-1" />
+                      <Input 
+                        id="name" 
+                        value={profileData.name} 
+                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        className="mt-1" 
+                      />
                     </div>
                     <div>
                       <Label htmlFor="email">Email</Label>
-                      <Input id="email" value="rahim@example.com" className="mt-1" />
+                      <Input 
+                        id="email" 
+                        value={profileData.email} 
+                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        className="mt-1" 
+                      />
                     </div>
                     <div>
                       <Label htmlFor="phone">Phone</Label>
-                      <Input id="phone" value="+880 1234 567890" className="mt-1" />
+                      <Input 
+                        id="phone" 
+                        value={profileData.phone} 
+                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        className="mt-1" 
+                      />
                     </div>
                     <div>
                       <Label htmlFor="location">Location</Label>
-                      <Input id="location" value="ধানমন্ডি, ঢাকা" className="mt-1" />
+                      <Input 
+                        id="location" 
+                        value={profileData.location} 
+                        onChange={(e) => handleInputChange('location', e.target.value)}
+                        className="mt-1" 
+                      />
                     </div>
                     <div className="md:col-span-2">
                       <Label htmlFor="bio">Bio</Label>
                       <Textarea
                         id="bio"
-                        value="বৈদ্যুতিক সার্ভিসিং এবং ইনস্টলেশনের ৮ বছরের অভিজ্ঞতা আছে। সব ধরনের ইলেকট্রিক্যাল কাজে দক্ষ।"
+                        value={profileData.bio}
+                        onChange={(e) => handleInputChange('bio', e.target.value)}
                         className="mt-1"
                         rows={4}
                       />
                     </div>
                   </div>
                   <div className="mt-6">
-                    <Button>Save Changes</Button>
+                    <Button onClick={handleProfileSave}>Save Changes</Button>
                   </div>
                 </CardContent>
               </Card>
@@ -462,7 +575,10 @@ const ProviderDashboard = () => {
                   <CardContent className="space-y-4">
                     <div>
                       <Label htmlFor="category">Category</Label>
-                      <Select defaultValue="electrician">
+                      <Select 
+                        value={profileData.category} 
+                        onValueChange={(value) => handleInputChange('category', value)}
+                      >
                         <SelectTrigger className="mt-1">
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
@@ -475,10 +591,17 @@ const ProviderDashboard = () => {
                     </div>
                     <div>
                       <Label htmlFor="priceRange">Price Range</Label>
-                      <Input id="priceRange" value="৳৫০০-১৫০০" className="mt-1" />
+                      <Input 
+                        id="priceRange" 
+                        value={profileData.priceRange} 
+                        onChange={(e) => handleInputChange('priceRange', e.target.value)}
+                        className="mt-1" 
+                      />
                     </div>
                     <div className="mt-4">
-                      <Button variant="outline" className="w-full">Update Services</Button>
+                      <Button variant="outline" className="w-full" onClick={handleServiceUpdate}>
+                        Update Services
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -488,11 +611,19 @@ const ProviderDashboard = () => {
                     <CardTitle>{text[language].accountSettings}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <Button variant="outline" className="w-full justify-start">
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => handleQuickAction('settings')}
+                    >
                       <Settings className="w-4 h-4 mr-2" />
                       {text[language].notificationSettings}
                     </Button>
-                    <Button variant="outline" className="w-full justify-start">
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => handleQuickAction('settings')}
+                    >
                       <Shield className="w-4 h-4 mr-2" />
                       {text[language].paymentSettings}
                     </Button>
