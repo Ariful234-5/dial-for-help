@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,16 +7,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Star, MapPin, Phone, MessageCircle, Filter, Search, Clock, Shield, Zap, Users, Award, Globe } from 'lucide-react';
+import { Star, MapPin, Phone, MessageCircle, Filter, Search, Clock, Shield, Zap, Users, Award, Globe, Settings, User } from 'lucide-react';
 import { ServiceProviderCard } from "@/components/ServiceProviderCard";
+import { ServiceProviderProfile } from "@/components/ServiceProviderProfile";
 import { LocationPicker } from "@/components/LocationPicker";
 import { ChatWindow } from "@/components/ChatWindow";
-import { BookingModal } from "@/components/BookingModal";
-import { EmergencyButton } from "@/components/EmergencyButton";
+import { AdvancedBookingModal } from "@/components/AdvancedBookingModal";
+import { EmergencyService } from "@/components/EmergencyService";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { ServiceHistory } from "@/components/ServiceHistory";
+import { Link } from "react-router-dom";
 
 const Index = () => {
+  // ... keep existing code (state variables, text object, categories, serviceProviders)
+  
   const [language, setLanguage] = useState('bn');
   const [location, setLocation] = useState({ lat: 23.8103, lng: 90.4125, address: "ঢাকা, বাংলাদেশ" });
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,6 +30,7 @@ const Index = () => {
   const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -48,7 +52,10 @@ const Index = () => {
       book: "বুক করুন",
       reviews: "রিভিউ",
       experience: "অভিজ্ঞতা",
-      years: "বছর"
+      years: "বছর",
+      admin: "অ্যাডমিন",
+      provider: "প্রদানকারী",
+      profile: "প্রোফাইল"
     },
     en: {
       title: "Pro Local Connect",
@@ -67,7 +74,10 @@ const Index = () => {
       book: "Book Now",
       reviews: "Reviews",
       experience: "Experience",
-      years: "years"
+      years: "years",
+      admin: "Admin",
+      provider: "Provider",
+      profile: "Profile"
     }
   };
 
@@ -190,6 +200,11 @@ const Index = () => {
     setShowBookingModal(true);
   };
 
+  const handleProfileView = (provider) => {
+    setSelectedProvider(provider);
+    setShowProfileModal(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
@@ -209,8 +224,24 @@ const Index = () => {
               <div className="text-sm text-gray-600">
                 {currentTime.toLocaleTimeString('bn-BD')}
               </div>
+              
+              {/* Navigation Links */}
+              <Link to="/admin">
+                <Button variant="outline" size="sm">
+                  <Settings className="w-4 h-4 mr-2" />
+                  {text[language].admin}
+                </Button>
+              </Link>
+              
+              <Link to="/provider-dashboard">
+                <Button variant="outline" size="sm">
+                  <User className="w-4 h-4 mr-2" />
+                  {text[language].provider}
+                </Button>
+              </Link>
+              
               <LanguageToggle language={language} setLanguage={setLanguage} />
-              <EmergencyButton language={language} />
+              <EmergencyService language={language} />
             </div>
           </div>
         </div>
@@ -321,14 +352,15 @@ const Index = () => {
             {/* Service Providers Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredProviders.map((provider) => (
-                <ServiceProviderCard
-                  key={provider.id}
-                  provider={provider}
-                  language={language}
-                  text={text}
-                  onChat={handleChat}
-                  onBook={handleBooking}
-                />
+                <div key={provider.id} onClick={() => handleProfileView(provider)} className="cursor-pointer">
+                  <ServiceProviderCard
+                    provider={provider}
+                    language={language}
+                    text={text}
+                    onChat={handleChat}
+                    onBook={handleBooking}
+                  />
+                </div>
               ))}
             </div>
 
@@ -349,6 +381,26 @@ const Index = () => {
         </div>
       </div>
 
+      {/* Provider Profile Modal */}
+      {showProfileModal && selectedProvider && (
+        <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto p-0">
+            <ServiceProviderProfile
+              provider={selectedProvider}
+              language={language}
+              onChat={() => {
+                setShowProfileModal(false);
+                handleChat(selectedProvider);
+              }}
+              onBook={() => {
+                setShowProfileModal(false);
+                handleBooking(selectedProvider);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
       {/* Chat Modal */}
       {showChatModal && selectedProvider && (
         <ChatWindow
@@ -359,9 +411,9 @@ const Index = () => {
         />
       )}
 
-      {/* Booking Modal */}
+      {/* Advanced Booking Modal */}
       {showBookingModal && selectedProvider && (
-        <BookingModal
+        <AdvancedBookingModal
           provider={selectedProvider}
           language={language}
           isOpen={showBookingModal}
