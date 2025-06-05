@@ -48,7 +48,24 @@ const ProviderDashboard = () => {
       personalInfo: 'ব্যক্তিগত তথ্য',
       serviceSettings: 'সেবা সেটিংস',
       paymentSettings: 'পেমেন্ট সেটিংস',
-      notificationSettings: 'নোটিফিকেশন সেটিংস'
+      notificationSettings: 'নোটিফিকেশন সেটিংস',
+      pendingPayments: 'বকেয়া পেমেন্ট',
+      earningsSummary: 'আয়ের সারাংশ',
+      weeklyEarnings: 'সাপ্তাহিক আয়',
+      totalEarnings: 'মোট আয়',
+      withdraw: 'টাকা তোলা',
+      complete: 'সম্পন্ন',
+      reschedule: 'পুনঃনির্ধারণ',
+      cancel: 'বাতিল',
+      customer: 'গ্রাহক',
+      service: 'সেবা',
+      dateAndTime: 'তারিখ ও সময়',
+      location: 'অবস্থান',
+      amount: 'পরিমাণ',
+      status: 'অবস্থা',
+      rating: 'রেটিং',
+      actions: 'কার্যক্রম',
+      quickActions: 'দ্রুত কার্যক্রম'
     },
     en: {
       dashboard: 'Provider Dashboard',
@@ -77,7 +94,24 @@ const ProviderDashboard = () => {
       personalInfo: 'Personal Information',
       serviceSettings: 'Service Settings',
       paymentSettings: 'Payment Settings',
-      notificationSettings: 'Notification Settings'
+      notificationSettings: 'Notification Settings',
+      pendingPayments: 'Pending Payments',
+      earningsSummary: 'Earnings Summary',
+      weeklyEarnings: 'Weekly Earnings',
+      totalEarnings: 'Total Earnings',
+      withdraw: 'Withdraw',
+      complete: 'Complete',
+      reschedule: 'Reschedule',
+      cancel: 'Cancel',
+      customer: 'Customer',
+      service: 'Service',
+      dateAndTime: 'Date & Time',
+      location: 'Location',
+      amount: 'Amount',
+      status: 'Status',
+      rating: 'Rating',
+      actions: 'Actions',
+      quickActions: 'Quick Actions'
     }
   };
 
@@ -185,6 +219,45 @@ const ProviderDashboard = () => {
     responseTime: '15 মিনিট',
     languages: ['বাংলা', 'English']
   });
+
+  const [reviewsList] = useState([
+    {
+      id: 1,
+      customer: 'আহমেদ আলী',
+      service: 'ইলেকট্রিক ওয়্যারিং',
+      rating: 5,
+      comment: 'খুবই ভালো সেবা পেয়েছি। সময়মতো এসেছেন এবং দক্ষতার সাথে কাজ সম্পন্ন করেছেন।',
+      date: '২০২৪-০১-১৫',
+      verified: true
+    },
+    {
+      id: 2,
+      customer: 'ফাতেমা খাতুন',
+      service: 'ফ্যান ইনস্টলেশন',
+      rating: 4,
+      comment: 'ভালো কাজ করেছেন। তবে একটু দেরিতে এসেছিলেন।',
+      date: '২০২৪-০১-১২',
+      verified: true
+    },
+    {
+      id: 3,
+      customer: 'করিম মিয়া',
+      service: 'সুইচবোর্ড মেরামত',
+      rating: 5,
+      comment: 'অসাধারণ কাজ! খুবই পেশাদার এবং বিনয়ী।',
+      date: '২০২৪-০১-১০',
+      verified: true
+    },
+    {
+      id: 4,
+      customer: 'সালমা বেগম',
+      service: 'লাইট রিপেয়ার',
+      rating: 4,
+      comment: 'সন্তোষজনক সেবা। দাম যুক্তিসঙ্গত ছিল।',
+      date: '২০২৪-০১-০৮',
+      verified: false
+    }
+  ]);
 
   const handleAvailabilityChange = (checked: boolean) => {
     setIsAvailable(checked);
@@ -579,7 +652,7 @@ const ProviderDashboard = () => {
                       <SelectItem value="all">{text[language].viewAll}</SelectItem>
                       <SelectItem value="upcoming">{text[language].upcomingBookings}</SelectItem>
                       <SelectItem value="completed">{text[language].completedBookings}</SelectItem>
-                      <SelectItem value="cancelled">{text[language].cancelled}</SelectItem>
+                      <SelectItem value="cancelled">{text[language].cancel}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
