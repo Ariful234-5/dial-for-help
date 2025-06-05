@@ -226,6 +226,13 @@ const Index = () => {
               </div>
               
               {/* Navigation Links */}
+              <Link to="/provider-registration">
+                <Button variant="default" size="sm" className="bg-green-600 hover:bg-green-700">
+                  <User className="w-4 h-4 mr-2" />
+                  {language === 'bn' ? 'প্রদানকারী হিসেবে যোগ দিন' : 'Join as Provider'}
+                </Button>
+              </Link>
+              
               <Link to="/admin">
                 <Button variant="outline" size="sm">
                   <Settings className="w-4 h-4 mr-2" />

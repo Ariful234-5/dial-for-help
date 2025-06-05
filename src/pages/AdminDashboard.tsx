@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,7 +25,17 @@ const AdminDashboard = () => {
       reject: 'প্রত্যাখ্যান',
       pending: 'অপেক্ষমান',
       approved: 'অনুমোদিত',
-      rejected: 'প্রত্যাখ্যাত'
+      rejected: 'প্রত্যাখ্যাত',
+      recentActivity: 'সাম্প্রতিক কার্যকলাপ',
+      systemHealth: 'সিস্টেম স্বাস্থ্য',
+      manageUsers: 'ব্যবহারকারী পরিচালনা',
+      viewAllProviders: 'সব প্রদানকারী দেখুন',
+      generateReport: 'রিপোর্ট তৈরি করুন',
+      userManagement: 'ব্যবহারকারী ব্যবস্থাপনা',
+      providerManagement: 'প্রদানকারী ব্যবস্থাপনা',
+      revenue: 'আয়',
+      activeUsers: 'সক্রিয় ব্যবহারকারী',
+      completedBookings: 'সম্পন্ন বুকিং'
     },
     en: {
       dashboard: 'Admin Dashboard',
@@ -43,7 +52,17 @@ const AdminDashboard = () => {
       reject: 'Reject',
       pending: 'Pending',
       approved: 'Approved',
-      rejected: 'Rejected'
+      rejected: 'Rejected',
+      recentActivity: 'Recent Activity',
+      systemHealth: 'System Health',
+      manageUsers: 'Manage Users',
+      viewAllProviders: 'View All Providers',
+      generateReport: 'Generate Report',
+      userManagement: 'User Management',
+      providerManagement: 'Provider Management',
+      revenue: 'Revenue',
+      activeUsers: 'Active Users',
+      completedBookings: 'Completed Bookings'
     }
   };
 
@@ -83,6 +102,51 @@ const AdminDashboard = () => {
       )
     );
   };
+
+  const userList = [
+    {
+      id: 1,
+      name: 'রহিম উদ্দিন',
+      email: 'rahim@example.com',
+      phone: '+880 1234 567890',
+      joinDate: '2024-01-10',
+      status: 'active',
+      totalBookings: 15
+    },
+    {
+      id: 2,
+      name: 'ফাতেমা খাতুন',
+      email: 'fatema@example.com',
+      phone: '+880 1234 567891',
+      joinDate: '2024-01-12',
+      status: 'active',
+      totalBookings: 8
+    }
+  ];
+
+  const recentActivities = [
+    {
+      id: 1,
+      action: 'নতুন প্রদানকারী নিবন্ধন',
+      user: 'আহমেদ আলী',
+      time: '২ মিনিট আগে',
+      type: 'registration'
+    },
+    {
+      id: 2,
+      action: 'বুকিং সম্পন্ন',
+      user: 'রহিম উদ্দিন',
+      time: '১৫ মিনিট আগে',
+      type: 'booking'
+    },
+    {
+      id: 3,
+      action: 'নতুন ব্যবহারকারী',
+      user: 'সালমা বেগম',
+      time: '৩০ মিনিট আগে',
+      type: 'user'
+    }
+  ];
 
   const stats = [
     {
@@ -148,52 +212,70 @@ const AdminDashboard = () => {
             <TabsTrigger value="overview">{text[language].overview}</TabsTrigger>
             <TabsTrigger value="approvals" className="relative">
               {text[language].approvals}
-              <Badge className="ml-2 bg-red-500 text-white">2</Badge>
+              <Badge className="ml-2 bg-red-500 text-white">{pendingProviders.filter(p => p.status === 'pending').length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="users">{text[language].users}</TabsTrigger>
             <TabsTrigger value="analytics">{text[language].analytics}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="lg:col-span-2">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <AlertTriangle className="w-5 h-5 text-yellow-500" />
-                    Recent Alerts
+                    {text[language].recentActivity}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    <div className="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                      <span className="text-sm">2 new provider applications pending</span>
-                    </div>
-                    <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm">15 new user registrations today</span>
-                    </div>
+                    {recentActivities.map((activity) => (
+                      <div key={activity.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                        <div className={`w-2 h-2 rounded-full ${
+                          activity.type === 'registration' ? 'bg-blue-500' :
+                          activity.type === 'booking' ? 'bg-green-500' : 'bg-purple-500'
+                        }`}></div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{activity.action}</p>
+                          <p className="text-xs text-gray-500">{activity.user} • {activity.time}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
+                  <CardTitle>{text[language].systemHealth}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button className="w-full justify-start" variant="outline">
-                    <UserCheck className="w-4 h-4 mr-2" />
-                    Review Provider Applications
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline">
-                    <Shield className="w-4 h-4 mr-2" />
-                    System Security Check
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline">
-                    <TrendingUp className="w-4 h-4 mr-2" />
-                    Generate Reports
-                  </Button>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Server Status</span>
+                    <Badge className="bg-green-100 text-green-800">Online</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Database</span>
+                    <Badge className="bg-green-100 text-green-800">Connected</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">API Response</span>
+                    <Badge className="bg-green-100 text-green-800">Fast</Badge>
+                  </div>
+                  <div className="space-y-3 mt-4">
+                    <Button className="w-full justify-start" variant="outline" size="sm">
+                      <UserCheck className="w-4 h-4 mr-2" />
+                      {text[language].manageUsers}
+                    </Button>
+                    <Button className="w-full justify-start" variant="outline" size="sm">
+                      <Shield className="w-4 h-4 mr-2" />
+                      {text[language].viewAllProviders}
+                    </Button>
+                    <Button className="w-full justify-start" variant="outline" size="sm">
+                      <TrendingUp className="w-4 h-4 mr-2" />
+                      {text[language].generateReport}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -268,23 +350,105 @@ const AdminDashboard = () => {
           <TabsContent value="users">
             <Card>
               <CardHeader>
-                <CardTitle>User Management</CardTitle>
+                <CardTitle>{text[language].userManagement}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">User management features will be implemented here.</p>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>Join Date</TableHead>
+                      <TableHead>Bookings</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {userList.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.name}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>{user.phone}</TableCell>
+                        <TableCell>{user.joinDate}</TableCell>
+                        <TableCell>{user.totalBookings}</TableCell>
+                        <TableCell>
+                          <Badge variant={user.status === 'active' ? 'secondary' : 'default'}>
+                            {user.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button size="sm" variant="outline">
+                              View
+                            </Button>
+                            <Button size="sm" variant={user.status === 'active' ? 'destructive' : 'default'}>
+                              {user.status === 'active' ? 'Block' : 'Activate'}
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="analytics">
-            <Card>
-              <CardHeader>
-                <CardTitle>Platform Analytics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">Analytics and reporting features will be implemented here.</p>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle>{text[language].analytics}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80 flex items-center justify-center bg-gray-50 rounded-md border border-dashed border-gray-300">
+                    <div className="text-center p-6">
+                      <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-600 mb-2">Analytics Dashboard</h3>
+                      <p className="text-gray-500 mb-4">Platform performance data and charts will be displayed here</p>
+                      <Button>Generate Analytics</Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Key Metrics</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium">{text[language].revenue}</span>
+                      <span className="text-sm font-bold">৳ 125,000</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div className="bg-green-600 h-2.5 rounded-full" style={{ width: '70%' }}></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium">{text[language].activeUsers}</span>
+                      <span className="text-sm font-bold">1,234</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: '85%' }}></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium">{text[language].completedBookings}</span>
+                      <span className="text-sm font-bold">2,891</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div className="bg-purple-600 h-2.5 rounded-full" style={{ width: '60%' }}></div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
