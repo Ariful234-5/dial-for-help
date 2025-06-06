@@ -30,10 +30,12 @@ import {
   Mail
 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { useServiceProviders } from "@/hooks/useServiceProviders";
+import { useUsers } from "@/hooks/useUsers";
+import { useReports } from "@/hooks/useReports";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 type LanguageKey = 'bn' | 'en';
-type ServiceCategory = 'electrician' | 'plumber' | 'cleaner' | 'acRepair' | 'painter' | 'carpenter';
-type StatusKey = 'active' | 'inactive' | 'pending' | 'suspended' | 'approved' | 'rejected';
 
 interface TextContent {
   [key: string]: string;
@@ -44,8 +46,13 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [userFilter, setUserFilter] = useState('all');
   const [providerFilter, setProviderFilter] = useState('all');
-  const [reportFilter, setReportFilter] = useState('all');
   const { toast } = useToast();
+
+  // Use the hooks
+  const { providers, loading: providersLoading, refetch: refetchProviders } = useServiceProviders();
+  const { users, loading: usersLoading, updateUserStatus } = useUsers();
+  const { reports, loading: reportsLoading, generateReport, downloadReport } = useReports();
+  const { analytics, loading: analyticsLoading, refreshAnalytics } = useAnalytics();
 
   const text: Record<LanguageKey, TextContent> = {
     bn: {
@@ -86,12 +93,6 @@ const AdminDashboard = () => {
       downloadReport: 'রিপোর্ট ডাউনলোড',
       refreshData: 'তথ্য রিফ্রেশ',
       exportData: 'তথ্য রপ্তানি',
-      systemSettings: 'সিস্টেম সেটিংস',
-      userSettings: 'ব্যবহারকারী সেটিংস',
-      notificationSettings: 'নোটিফিকেশন সেটিংস',
-      securitySettings: 'নিরাপত্তা সেটিংস',
-      backupData: 'ব্যাকআপ তথ্য',
-      restoreData: 'পুনরুদ্ধার তথ্য',
       active: 'সক্রিয়',
       inactive: 'নিষ্ক্রিয়',
       pending: 'অপেক্ষমাণ',
@@ -143,12 +144,6 @@ const AdminDashboard = () => {
       downloadReport: 'Download Report',
       refreshData: 'Refresh Data',
       exportData: 'Export Data',
-      systemSettings: 'System Settings',
-      userSettings: 'User Settings',
-      notificationSettings: 'Notification Settings',
-      securitySettings: 'Security Settings',
-      backupData: 'Backup Data',
-      restoreData: 'Restore Data',
       active: 'Active',
       inactive: 'Inactive',
       pending: 'Pending',
@@ -173,7 +168,7 @@ const AdminDashboard = () => {
       electrician: getTranslation('electrician'),
       plumber: getTranslation('plumber'),
       cleaner: getTranslation('cleaner'),
-      acRepair: getTranslation('acRepair'),
+      'ac-repair': getTranslation('acRepair'),
       painter: getTranslation('painter'),
       carpenter: getTranslation('carpenter')
     };
@@ -192,138 +187,69 @@ const AdminDashboard = () => {
     return statusMap[status] || status;
   };
 
-  const [dashboardStats] = useState({
-    totalUsers: 1247,
-    activeProviders: 89,
-    pendingApprovals: 12,
-    totalRevenue: 125000,
-    monthlyGrowth: 15.2,
-    avgRating: 4.6,
-    totalBookings: 3456,
-    completionRate: 94.5
-  });
-
-  const [recentUsers] = useState([
-    {
-      id: 1,
-      name: 'আহমেদ আলী',
-      email: 'ahmed@example.com',
-      phone: '+880 1234 567890',
-      status: 'active',
-      joinDate: '২০২৪-০১-১৫',
-      totalBookings: 23,
-      location: 'ধানমন্ডি'
-    },
-    {
-      id: 2,
-      name: 'ফাতেমা খাতুন',
-      email: 'fatema@example.com',
-      phone: '+880 1234 567891',
-      status: 'active',
-      joinDate: '২০২৪-০১-১২',
-      totalBookings: 18,
-      location: 'গুলশান'
-    },
-    {
-      id: 3,
-      name: 'করিম মিয়া',
-      email: 'karim@example.com',
-      phone: '+880 1234 567892',
-      status: 'inactive',
-      joinDate: '২০২৪-০১-১০',
-      totalBookings: 5,
-      location: 'উত্তরা'
+  const handleUserAction = async (userId: string, action: string) => {
+    if (action === 'স্থগিত' || action === 'সক্রিয়') {
+      const newStatus = action === 'স্থগিত' ? 'suspended' : 'active';
+      const result = await updateUserStatus(userId, newStatus);
+      
+      if (result.success) {
+        toast({
+          title: 'সফল',
+          description: `ব্যবহারকারীর অবস্থা ${action} করা হয়েছে।`,
+        });
+      } else {
+        toast({
+          title: 'ত্রুটি',
+          description: 'অপারেশন সম্পন্ন করতে পারা যায়নি।',
+          variant: 'destructive',
+        });
+      }
+    } else {
+      toast({
+        title: 'ব্যবহারকারী কার্যক্রম',
+        description: `ব্যবহারকারী #${userId} এর জন্য ${action} সম্পাদিত হয়েছে।`,
+      });
     }
-  ]);
-
-  const [pendingProviders] = useState([
-    {
-      id: 1,
-      name: 'রহিম উদ্দিন',
-      email: 'rahim@example.com',
-      phone: '+880 1234 567893',
-      category: 'electrician',
-      location: 'ধানমন্ডি',
-      experience: '৮ বছর',
-      status: 'pending',
-      appliedDate: '২০২৪-০১-১৪',
-      documents: ['জাতীয় পরিচয়পত্র', 'অভিজ্ঞতার সার্টিফিকেট']
-    },
-    {
-      id: 2,
-      name: 'সালমা বেগম',
-      email: 'salma@example.com',
-      phone: '+880 1234 567894',
-      category: 'cleaner',
-      location: 'গুলশান',
-      experience: '৫ বছর',
-      status: 'pending',
-      appliedDate: '২০২৪-০১-১৩',
-      documents: ['জাতীয় পরিচয়পত্র', 'রেফারেন্স']
-    }
-  ]);
-
-  const [allProviders] = useState([
-    {
-      id: 1,
-      name: 'মোহাম্মদ হাসান',
-      email: 'hasan@example.com',
-      phone: '+880 1234 567895',
-      category: 'electrician',
-      location: 'ধানমন্ডি',
-      rating: 4.8,
-      completedJobs: 156,
-      status: 'active',
-      joinDate: '২০২৩-০৮-১৫'
-    },
-    {
-      id: 2,
-      name: 'নাসির আহমেদ',
-      email: 'nasir@example.com',
-      phone: '+880 1234 567896',
-      category: 'plumber',
-      location: 'উত্তরা',
-      rating: 4.6,
-      completedJobs: 134,
-      status: 'active',
-      joinDate: '২০২৩-০৯-২০'
-    },
-    {
-      id: 3,
-      name: 'রাশিদা খাতুন',
-      email: 'rashida@example.com',
-      phone: '+880 1234 567897',
-      category: 'cleaner',
-      location: 'গুলশান',
-      rating: 4.9,
-      completedJobs: 98,
-      status: 'suspended',
-      joinDate: '২০২৩-১০-০৫'
-    }
-  ]);
-
-  const handleUserAction = (userId: number, action: string) => {
-    toast({
-      title: 'ব্যবহারকারী কার্যক্রম',
-      description: `ব্যবহারকারী #${userId} এর জন্য ${action} সম্পাদিত হয়েছে।`,
-    });
   };
 
-  const handleProviderAction = (providerId: number, action: string) => {
+  const handleProviderAction = (providerId: string, action: string) => {
     toast({
       title: 'প্রদানকারী কার্যক্রম',
       description: `প্রদানকারী #${providerId} এর জন্য ${action} সম্পাদিত হয়েছে।`,
     });
   };
 
-  const handleReportGeneration = (reportType: string) => {
-    toast({
-      title: 'রিপোর্ট তৈরি',
-      description: `${reportType} রিপোর্ট তৈরি করা হচ্ছে...`,
-    });
+  const handleReportGeneration = async (reportType: string) => {
+    const typeMap: Record<string, 'user' | 'provider' | 'financial' | 'booking' | 'performance'> = {
+      'ব্যবহারকারী রিপোর্ট': 'user',
+      'প্রদানকারী রিপোর্ট': 'provider',
+      'আর্থিক রিপোর্ট': 'financial',
+      'বুকিং রিপোর্ট': 'booking',
+      'কর্মক্ষমতা রিপোর্ট': 'performance'
+    };
+
+    const result = await generateReport(typeMap[reportType] || 'user');
+    
+    if (result.success) {
+      toast({
+        title: 'রিপোর্ট তৈরি',
+        description: `${reportType} তৈরি করা হচ্ছে...`,
+      });
+    } else {
+      toast({
+        title: 'ত্রুটি',
+        description: 'রিপোর্ট তৈরি করতে সমস্যা হয়েছে।',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleSystemAction = (action: string) => {
+  const handleSystemAction = async (action: string) => {
+    if (action === 'তথ্য রিফ্রেশ') {
+      await refreshAnalytics();
+      await refetchProviders();
+    }
+    
     toast({
       title: 'সিস্টেম কার্যক্রম',
       description: `${action} সম্পাদিত হচ্ছে...`,
@@ -333,15 +259,15 @@ const AdminDashboard = () => {
   const stats = [
     {
       title: getTranslation('totalUsers'),
-      value: dashboardStats.totalUsers.toLocaleString(),
+      value: analytics.totalUsers.toLocaleString(),
       icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
-      change: `+${dashboardStats.monthlyGrowth}% এই মাসে`
+      change: `+${analytics.monthlyGrowth}% এই মাসে`
     },
     {
       title: getTranslation('activeProviders'),
-      value: dashboardStats.activeProviders.toString(),
+      value: analytics.activeProviders.toString(),
       icon: UserCheck,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
@@ -349,7 +275,7 @@ const AdminDashboard = () => {
     },
     {
       title: getTranslation('pendingApprovals'),
-      value: dashboardStats.pendingApprovals.toString(),
+      value: analytics.pendingApprovals.toString(),
       icon: AlertTriangle,
       color: 'text-yellow-600',
       bgColor: 'bg-yellow-100',
@@ -357,7 +283,7 @@ const AdminDashboard = () => {
     },
     {
       title: getTranslation('totalRevenue'),
-      value: `৳${dashboardStats.totalRevenue.toLocaleString()}`,
+      value: `৳${analytics.totalRevenue.toLocaleString()}`,
       icon: DollarSign,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100',
@@ -365,19 +291,23 @@ const AdminDashboard = () => {
     }
   ];
 
-  const filteredUsers = recentUsers.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = userFilter === 'all' || user.status === userFilter;
     return matchesSearch && matchesFilter;
   });
 
-  const filteredProviders = allProviders.filter(provider => {
+  const filteredProviders = providers.filter(provider => {
     const matchesSearch = provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         provider.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = providerFilter === 'all' || provider.status === providerFilter;
+                         provider.name_en.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = providerFilter === 'all' || 
+                         (providerFilter === 'active' && provider.available) ||
+                         (providerFilter === 'inactive' && !provider.available);
     return matchesSearch && matchesFilter;
   });
+
+  const pendingProviders = providers.filter(provider => !provider.verified);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -389,8 +319,12 @@ const AdminDashboard = () => {
               <p className="text-gray-600 mt-2">সিস্টেম পরিচালনা এবং নিয়ন্ত্রণ কেন্দ্র</p>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" onClick={() => handleSystemAction('তথ্য রিফ্রেশ')}>
-                <RefreshCw className="w-4 h-4 mr-2" />
+              <Button 
+                variant="outline" 
+                onClick={() => handleSystemAction('তথ্য রিফ্রেশ')}
+                disabled={analyticsLoading}
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${analyticsLoading ? 'animate-spin' : ''}`} />
                 {getTranslation('refreshData')}
               </Button>
               <Button variant="outline">
@@ -443,23 +377,23 @@ const AdminDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {recentUsers.slice(0, 5).map((user) => (
+                    {users.slice(0, 5).map((user) => (
                       <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                             <Users className="w-5 h-5 text-blue-600" />
                           </div>
                           <div>
-                            <p className="font-medium">{user.name}</p>
+                            <p className="font-medium">{user.full_name}</p>
                             <p className="text-sm text-gray-600">{user.email}</p>
-                            <p className="text-xs text-gray-500">{user.joinDate} এ যোগদান</p>
+                            <p className="text-xs text-gray-500">{user.created_at} এ যোগদান</p>
                           </div>
                         </div>
                         <div className="text-right">
                           <Badge variant={user.status === 'active' ? 'secondary' : 'outline'}>
                             {getStatusTranslation(user.status)}
                           </Badge>
-                          <p className="text-sm text-gray-600 mt-1">{user.totalBookings} বুকিং</p>
+                          <p className="text-sm text-gray-600 mt-1">{user.total_bookings} বুকিং</p>
                         </div>
                       </div>
                     ))}
@@ -473,13 +407,13 @@ const AdminDashboard = () => {
                     <CardTitle>অনুমোদনের অপেক্ষায়</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {pendingProviders.map((provider) => (
+                    {pendingProviders.slice(0, 3).map((provider) => (
                       <div key={provider.id} className="p-3 border rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <p className="font-medium text-sm">{provider.name}</p>
                           <Badge variant="outline">{getCategoryTranslation(provider.category)}</Badge>
                         </div>
-                        <p className="text-xs text-gray-600 mb-3">{provider.location} • {provider.experience}</p>
+                        <p className="text-xs text-gray-600 mb-3">{provider.location} • {provider.experience} বছর</p>
                         <div className="flex space-x-2">
                           <Button 
                             size="sm" 
@@ -517,6 +451,7 @@ const AdminDashboard = () => {
                       className="w-full justify-start" 
                       size="sm"
                       onClick={() => handleReportGeneration('ব্যবহারকারী রিপোর্ট')}
+                      disabled={reportsLoading}
                     >
                       <FileText className="w-4 h-4 mr-2" />
                       {getTranslation('generateReport')}
@@ -537,7 +472,7 @@ const AdminDashboard = () => {
                       onClick={() => handleSystemAction('ব্যাকআপ তৈরি')}
                     >
                       <Shield className="w-4 h-4 mr-2" />
-                      {getTranslation('backupData')}
+                      ব্যাকআপ তৈরি
                     </Button>
                     <Button 
                       variant="outline" 
@@ -546,7 +481,7 @@ const AdminDashboard = () => {
                       onClick={() => handleSystemAction('সিস্টেম সেটিংস')}
                     >
                       <Settings className="w-4 h-4 mr-2" />
-                      {getTranslation('systemSettings')}
+                      সিস্টেম সেটিংস
                     </Button>
                   </CardContent>
                 </Card>
@@ -590,55 +525,59 @@ const AdminDashboard = () => {
                   </Select>
                 </div>
 
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{getTranslation('name')}</TableHead>
-                      <TableHead>{getTranslation('email')}</TableHead>
-                      <TableHead>{getTranslation('phone')}</TableHead>
-                      <TableHead>{getTranslation('location')}</TableHead>
-                      <TableHead>{getTranslation('status')}</TableHead>
-                      <TableHead>বুকিং</TableHead>
-                      <TableHead>{getTranslation('joinDate')}</TableHead>
-                      <TableHead>{getTranslation('actions')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.name}</TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>{user.phone}</TableCell>
-                        <TableCell>{user.location}</TableCell>
-                        <TableCell>
-                          <Badge variant={user.status === 'active' ? 'secondary' : 'outline'}>
-                            {getStatusTranslation(user.status)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{user.totalBookings}</TableCell>
-                        <TableCell>{user.joinDate}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-1">
-                            <Button 
-                              size="sm" 
-                              variant="ghost"
-                              onClick={() => handleUserAction(user.id, 'দেখুন')}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleUserAction(user.id, user.status === 'active' ? 'স্থগিত' : 'সক্রিয়')}
-                            >
-                              {user.status === 'active' ? getTranslation('suspend') : getTranslation('activate')}
-                            </Button>
-                          </div>
-                        </TableCell>
+                {usersLoading ? (
+                  <div className="text-center py-8">লোড হচ্ছে...</div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{getTranslation('name')}</TableHead>
+                        <TableHead>{getTranslation('email')}</TableHead>
+                        <TableHead>{getTranslation('phone')}</TableHead>
+                        <TableHead>{getTranslation('location')}</TableHead>
+                        <TableHead>{getTranslation('status')}</TableHead>
+                        <TableHead>বুকিং</TableHead>
+                        <TableHead>{getTranslation('joinDate')}</TableHead>
+                        <TableHead>{getTranslation('actions')}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">{user.full_name}</TableCell>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>{user.phone}</TableCell>
+                          <TableCell>{user.location}</TableCell>
+                          <TableCell>
+                            <Badge variant={user.status === 'active' ? 'secondary' : 'outline'}>
+                              {getStatusTranslation(user.status)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{user.total_bookings}</TableCell>
+                          <TableCell>{user.created_at}</TableCell>
+                          <TableCell>
+                            <div className="flex space-x-1">
+                              <Button 
+                                size="sm" 
+                                variant="ghost"
+                                onClick={() => handleUserAction(user.id, 'দেখুন')}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleUserAction(user.id, user.status === 'active' ? 'স্থগিত' : 'সক্রিয়')}
+                              >
+                                {user.status === 'active' ? getTranslation('suspend') : getTranslation('activate')}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -674,77 +613,70 @@ const AdminDashboard = () => {
                       <SelectItem value="all">সব প্রদানকারী</SelectItem>
                       <SelectItem value="active">{getTranslation('active')}</SelectItem>
                       <SelectItem value="inactive">{getTranslation('inactive')}</SelectItem>
-                      <SelectItem value="suspended">{getTranslation('suspended')}</SelectItem>
-                      <SelectItem value="pending">{getTranslation('pending')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{getTranslation('name')}</TableHead>
-                      <TableHead>{getTranslation('email')}</TableHead>
-                      <TableHead>{getTranslation('category')}</TableHead>
-                      <TableHead>{getTranslation('location')}</TableHead>
-                      <TableHead>{getTranslation('rating')}</TableHead>
-                      <TableHead>{getTranslation('completedJobs')}</TableHead>
-                      <TableHead>{getTranslation('status')}</TableHead>
-                      <TableHead>{getTranslation('actions')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredProviders.map((provider) => (
-                      <TableRow key={provider.id}>
-                        <TableCell className="font-medium">{provider.name}</TableCell>
-                        <TableCell>{provider.email}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {getCategoryTranslation(provider.category)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{provider.location}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 mr-1" />
-                            <span>{provider.rating}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{provider.completedJobs}</TableCell>
-                        <TableCell>
-                          <Badge variant={
-                            provider.status === 'active' ? 'secondary' : 
-                            provider.status === 'suspended' ? 'destructive' : 'outline'
-                          }>
-                            {getStatusTranslation(provider.status)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-1">
-                            <Button 
-                              size="sm" 
-                              variant="ghost"
-                              onClick={() => handleProviderAction(provider.id, 'দেখুন')}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleProviderAction(provider.id, 
-                                provider.status === 'active' ? 'স্থগিত' : 
-                                provider.status === 'suspended' ? 'সক্রিয়' : 'অনুমোদন'
-                              )}
-                            >
-                              {provider.status === 'active' ? getTranslation('suspend') : 
-                               provider.status === 'suspended' ? getTranslation('activate') : getTranslation('approve')}
-                            </Button>
-                          </div>
-                        </TableCell>
+                {providersLoading ? (
+                  <div className="text-center py-8">লোড হচ্ছে...</div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{getTranslation('name')}</TableHead>
+                        <TableHead>{getTranslation('category')}</TableHead>
+                        <TableHead>{getTranslation('location')}</TableHead>
+                        <TableHead>{getTranslation('rating')}</TableHead>
+                        <TableHead>অভিজ্ঞতা</TableHead>
+                        <TableHead>{getTranslation('status')}</TableHead>
+                        <TableHead>{getTranslation('actions')}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredProviders.map((provider) => (
+                        <TableRow key={provider.id}>
+                          <TableCell className="font-medium">{provider.name}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {getCategoryTranslation(provider.category)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{provider.location}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 mr-1" />
+                              <span>{provider.rating}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{provider.experience} বছর</TableCell>
+                          <TableCell>
+                            <Badge variant={provider.available ? 'secondary' : 'outline'}>
+                              {provider.available ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-1">
+                              <Button 
+                                size="sm" 
+                                variant="ghost"
+                                onClick={() => handleProviderAction(provider.id, 'দেখুন')}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleProviderAction(provider.id, provider.verified ? 'স্থগিত' : 'অনুমোদন')}
+                              >
+                                {provider.verified ? getTranslation('suspend') : getTranslation('approve')}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -760,6 +692,7 @@ const AdminDashboard = () => {
                     variant="outline" 
                     className="w-full justify-start"
                     onClick={() => handleReportGeneration('ব্যবহারকারী রিপোর্ট')}
+                    disabled={reportsLoading}
                   >
                     <FileText className="w-4 h-4 mr-2" />
                     ব্যবহারকারী রিপোর্ট তৈরি করুন
@@ -768,6 +701,7 @@ const AdminDashboard = () => {
                     variant="outline" 
                     className="w-full justify-start"
                     onClick={() => handleReportGeneration('প্রদানকারী রিপোর্ট')}
+                    disabled={reportsLoading}
                   >
                     <FileText className="w-4 h-4 mr-2" />
                     প্রদানকারী রিপোর্ট তৈরি করুন
@@ -776,6 +710,7 @@ const AdminDashboard = () => {
                     variant="outline" 
                     className="w-full justify-start"
                     onClick={() => handleReportGeneration('আর্থিক রিপোর্ট')}
+                    disabled={reportsLoading}
                   >
                     <DollarSign className="w-4 h-4 mr-2" />
                     আর্থিক রিপোর্ট তৈরি করুন
@@ -784,6 +719,7 @@ const AdminDashboard = () => {
                     variant="outline" 
                     className="w-full justify-start"
                     onClick={() => handleReportGeneration('বুকিং রিপোর্ট')}
+                    disabled={reportsLoading}
                   >
                     <Calendar className="w-4 h-4 mr-2" />
                     বুকিং রিপোর্ট তৈরি করুন
@@ -792,6 +728,7 @@ const AdminDashboard = () => {
                     variant="outline" 
                     className="w-full justify-start"
                     onClick={() => handleReportGeneration('কর্মক্ষমতা রিপোর্ট')}
+                    disabled={reportsLoading}
                   >
                     <TrendingUp className="w-4 h-4 mr-2" />
                     কর্মক্ষমতা রিপোর্ট তৈরি করুন
@@ -805,20 +742,24 @@ const AdminDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {[
-                      { name: 'মাসিক ব্যবহারকারী রিপোর্ট', date: '২০২৪-০১-১৫', size: '২.৩ MB' },
-                      { name: 'প্রদানকারী কর্মক্ষমতা রিপোর্ট', date: '২০২৪-০১-১০', size: '১.৮ MB' },
-                      { name: 'আর্থিক সারসংক্ষেপ', date: '২০২৪-০১-০৫', size: '৯৫৬ KB' }
-                    ].map((report, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                    {reports.map((report) => (
+                      <div key={report.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div>
                           <p className="font-medium text-sm">{report.name}</p>
                           <p className="text-xs text-gray-600">{report.date} • {report.size}</p>
+                          <Badge 
+                            variant={report.status === 'completed' ? 'secondary' : 'outline'}
+                            className="mt-1"
+                          >
+                            {report.status === 'completed' ? 'সম্পন্ন' : 
+                             report.status === 'generating' ? 'তৈরি হচ্ছে' : 'ব্যর্থ'}
+                          </Badge>
                         </div>
                         <Button 
                           size="sm" 
                           variant="ghost"
-                          onClick={() => handleSystemAction(`${report.name} ডাউনলোড`)}
+                          onClick={() => downloadReport(report.id)}
+                          disabled={report.status !== 'completed'}
                         >
                           <Download className="w-4 h-4" />
                         </Button>
@@ -855,19 +796,19 @@ const AdminDashboard = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-3 bg-blue-50 rounded-lg">
                       <p className="text-sm text-gray-600">গড় প্রতিক্রিয়ার সময়</p>
-                      <p className="text-xl font-bold text-blue-600">১২ মিনিট</p>
+                      <p className="text-xl font-bold text-blue-600">{analytics.responseTime} মিনিট</p>
                     </div>
                     <div className="p-3 bg-green-50 rounded-lg">
                       <p className="text-sm text-gray-600">সম্পূর্ণতার হার</p>
-                      <p className="text-xl font-bold text-green-600">{dashboardStats.completionRate}%</p>
+                      <p className="text-xl font-bold text-green-600">{analytics.completionRate}%</p>
                     </div>
                     <div className="p-3 bg-yellow-50 rounded-lg">
                       <p className="text-sm text-gray-600">গড় রেটিং</p>
-                      <p className="text-xl font-bold text-yellow-600">{dashboardStats.avgRating}</p>
+                      <p className="text-xl font-bold text-yellow-600">{analytics.avgRating}</p>
                     </div>
                     <div className="p-3 bg-purple-50 rounded-lg">
                       <p className="text-sm text-gray-600">মোট বুকিং</p>
-                      <p className="text-xl font-bold text-purple-600">{dashboardStats.totalBookings.toLocaleString()}</p>
+                      <p className="text-xl font-bold text-purple-600">{analytics.totalBookings.toLocaleString()}</p>
                     </div>
                   </div>
                   

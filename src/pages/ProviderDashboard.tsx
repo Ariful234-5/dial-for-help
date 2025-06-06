@@ -1,453 +1,245 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Switch } from "@/components/ui/switch";
-import { Calendar, Clock, DollarSign, Star, MessageCircle, Settings, User, TrendingUp, Shield, CheckCircle, Phone, MapPin, Edit, Eye, Download, RefreshCw, Plus, Search, Filter } from 'lucide-react';
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { 
+  DollarSign, 
+  Calendar, 
+  Clock, 
+  Star, 
+  Users, 
+  CheckCircle, 
+  XCircle,
+  Eye,
+  Phone,
+  MessageCircle,
+  Bell,
+  Settings,
+  BarChart3,
+  TrendingUp,
+  MapPin,
+  Edit,
+  Save
+} from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { useProviderDashboard } from "@/hooks/useProviderDashboard";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useAuth } from "@/hooks/useAuth";
 
 const ProviderDashboard = () => {
-  const [language] = useState('bn');
-  const [isAvailable, setIsAvailable] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [bookingFilter, setBookingFilter] = useState('all');
-  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const { user } = useAuth();
   const { toast } = useToast();
+  const [language] = useState('bn');
+  const [activeTab, setActiveTab] = useState('overview');
+  const [isAvailable, setIsAvailable] = useState(true);
+  const [editingProfile, setEditingProfile] = useState(false);
+  
+  // Provider profile state
+  const [profile, setProfile] = useState({
+    name: 'মোহাম্মদ হাসান',
+    nameEn: 'Mohammad Hasan',
+    category: 'electrician',
+    phone: '+880 1712 345678',
+    location: 'ধানমন্ডি, ঢাকা',
+    locationEn: 'Dhanmondi, Dhaka',
+    experience: 8,
+    description: 'অভিজ্ঞ ইলেকট্রিশিয়ান। সব ধরনের ইলেকট্রিক্যাল কাজে দক্ষ।',
+    descriptionEn: 'Experienced electrician skilled in all types of electrical work.',
+    price: '৫০০-১৫০০ টাকা',
+    priceEn: '500-1500 BDT',
+    specialties: ['বাড়ির তার', 'ফ্যান ইনস্টলেশন', 'আলো মেরামত'],
+    specialtiesEn: ['House Wiring', 'Fan Installation', 'Light Repair']
+  });
+
+  const { stats, recentBookings, loading, updateBookingStatus } = useProviderDashboard(user?.id);
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
   const text = {
     bn: {
       dashboard: 'প্রদানকারী ড্যাশবোর্ড',
-      profile: 'প্রোফাইল',
+      overview: 'সংক্ষিপ্ত বিবরণ',
       bookings: 'বুকিংসমূহ',
-      earnings: 'আয়',
-      reviews: 'রিভিউ',
+      profile: 'প্রোফাইল',
+      analytics: 'বিশ্লেষণ',
+      notifications: 'নোটিফিকেশন',
       settings: 'সেটিংস',
-      todayEarnings: "আজকের আয়",
       totalBookings: 'মোট বুকিং',
+      completedJobs: 'সম্পন্ন কাজ',
+      pendingBookings: 'অপেক্ষমাণ বুকিং',
+      totalEarnings: 'মোট আয়',
       averageRating: 'গড় রেটিং',
-      totalReviews: 'মোট রিভিউ',
-      availability: 'উপলব্ধতা',
+      responseTime: 'প্রতিক্রিয়ার সময়',
       available: 'উপলব্ধ',
       unavailable: 'অনুপলব্ধ',
-      recentBookings: 'সাম্প্রতিক বুকিং',
-      upcomingBookings: 'আসন্ন বুকিং',
-      completedBookings: 'সম্পন্ন বুকিং',
-      monthlyEarnings: 'মাসিক আয়',
-      serviceAnalytics: 'সেবা বিশ্লেষণ',
-      customerReviews: 'গ্রাহক রিভিউ',
-      accountSettings: 'অ্যাকাউন্ট সেটিংস',
-      viewAll: 'সবগুলো দেখুন',
-      totalEarningsThisMonth: 'এই মাসের মোট আয়',
-      totalEarningsLastMonth: 'গত মাসের মোট আয়',
-      personalInfo: 'ব্যক্তিগত তথ্য',
-      serviceSettings: 'সেবা সেটিংস',
-      paymentSettings: 'পেমেন্ট সেটিংস',
-      notificationSettings: 'নোটিফিকেশন সেটিংস',
-      pendingPayments: 'বকেয়া পেমেন্ট',
-      earningsSummary: 'আয়ের সারাংশ',
-      weeklyEarnings: 'সাপ্তাহিক আয়',
-      totalEarnings: 'মোট আয়',
-      withdraw: 'টাকা তোলা',
+      accept: 'গ্রহণ',
+      reject: 'প্রত্যাখ্যান',
       complete: 'সম্পন্ন',
-      reschedule: 'পুনঃনির্ধারণ',
+      contact: 'যোগাযোগ',
+      view: 'দেখুন',
+      edit: 'সম্পাদনা',
+      save: 'সংরক্ষণ',
       cancel: 'বাতিল',
       customer: 'গ্রাহক',
-      service: 'সেবা',
-      dateAndTime: 'তারিখ ও সময়',
-      location: 'অবস্থান',
-      amount: 'পরিমাণ',
+      date: 'তারিখ',
+      time: 'সময়',
       status: 'অবস্থা',
-      rating: 'রেটিং',
+      amount: 'পরিমাণ',
       actions: 'কার্যক্রম',
-      quickActions: 'দ্রুত কার্যক্রম'
-    },
-    en: {
-      dashboard: 'Provider Dashboard',
-      profile: 'Profile',
-      bookings: 'Bookings',
-      earnings: 'Earnings',
-      reviews: 'Reviews',
-      settings: 'Settings',
-      todayEarnings: "Today's Earnings",
-      totalBookings: 'Total Bookings',
-      averageRating: 'Average Rating',
-      totalReviews: 'Total Reviews',
-      availability: 'Availability',
-      available: 'Available',
-      unavailable: 'Unavailable',
-      recentBookings: 'Recent Bookings',
-      upcomingBookings: 'Upcoming Bookings',
-      completedBookings: 'Completed Bookings',
-      monthlyEarnings: 'Monthly Earnings',
-      serviceAnalytics: 'Service Analytics',
-      customerReviews: 'Customer Reviews',
-      accountSettings: 'Account Settings',
-      viewAll: 'View All',
-      totalEarningsThisMonth: 'Total Earnings This Month',
-      totalEarningsLastMonth: 'Total Earnings Last Month',
-      personalInfo: 'Personal Information',
-      serviceSettings: 'Service Settings',
-      paymentSettings: 'Payment Settings',
-      notificationSettings: 'Notification Settings',
-      pendingPayments: 'Pending Payments',
-      earningsSummary: 'Earnings Summary',
-      weeklyEarnings: 'Weekly Earnings',
-      totalEarnings: 'Total Earnings',
-      withdraw: 'Withdraw',
-      complete: 'Complete',
-      reschedule: 'Reschedule',
-      cancel: 'Cancel',
-      customer: 'Customer',
-      service: 'Service',
-      dateAndTime: 'Date & Time',
-      location: 'Location',
-      amount: 'Amount',
-      status: 'Status',
-      rating: 'Rating',
-      actions: 'Actions',
-      quickActions: 'Quick Actions'
+      pending: 'অপেক্ষমাণ',
+      confirmed: 'নিশ্চিত',
+      completed: 'সম্পন্ন',
+      cancelled: 'বাতিল',
+      name: 'নাম',
+      category: 'ক্যাটেগরি',
+      phone: 'ফোন',
+      location: 'এলাকা',
+      experience: 'অভিজ্ঞতা',
+      description: 'বিবরণ',
+      price: 'মূল্য',
+      specialties: 'বিশেষত্ব'
     }
   };
 
-  const [earningsData, setEarningsData] = useState({
-    todayEarnings: 2500,
-    weeklyEarnings: 15000,
-    monthlyEarnings: 45000,
-    totalEarnings: 125000,
-    pendingPayments: 3500,
-    lastPayment: '২০২৪-০১-১০',
-    avgBookingValue: 850
-  });
-
-  const [scheduleData, setScheduleData] = useState([
-    {
-      id: 1,
-      date: '২০২৪-০১-১৬',
-      time: '10:00 AM',
-      customer: 'আহমেদ আলী',
-      service: 'ইলেকট্রিক ওয়্যারিং',
-      status: 'confirmed',
-      payment: '৳১,২০০',
-      location: 'ধানমন্ডি'
-    },
-    {
-      id: 2,
-      date: '২০২৪-০১-১৬',
-      time: '2:00 PM',
-      customer: 'ফাতেমা খাতুন',
-      service: 'ফ্যান ইনস্টলেশন',
-      status: 'pending',
-      payment: '৳৮০০',
-      location: 'গুলশান'
-    },
-    {
-      id: 3,
-      date: '২০২৪-০১-১৭',
-      time: '11:00 AM',
-      customer: 'করিম মিয়া',
-      service: 'সুইচবোর্ড মেরামত',
-      status: 'completed',
-      payment: '৳৬০০',
-      location: 'উত্তরা'
-    }
-  ]);
-
-  const [recentBookings, setRecentBookings] = useState([
-    {
-      id: 1,
-      customer: 'রহিম উদ্দিন',
-      service: 'ইলেকট্রিক ওয়্যারিং',
-      time: '10:00 AM',
-      date: '২০২৪-০১-১৫',
-      status: 'completed',
-      amount: '৳১,২০০',
-      rating: 5,
-      location: 'ধানমন্ডি'
-    },
-    {
-      id: 2,
-      customer: 'ফাতেমা খাতুন',
-      service: 'ফ্যান ইনস্টলেশন',
-      time: '2:00 PM',
-      date: '২০২৪-০১-১৫',
-      status: 'upcoming',
-      amount: '৳৮০০',
-      rating: 0,
-      location: 'গুলশান'
-    },
-    {
-      id: 3,
-      customer: 'করিম মিয়া',
-      service: 'সুইচবোর্ড মেরামত',
-      time: '11:00 AM',
-      date: '২০২৪-০১-১৪',
-      status: 'completed',
-      amount: '৳৬০০',
-      rating: 4,
-      location: 'উত্তরা'
-    },
-    {
-      id: 4,
-      customer: 'সালমা বেগম',
-      service: 'লাইট রিপেয়ার',
-      time: '3:00 PM',
-      date: '২০২৪-০১-১৩',
-      status: 'cancelled',
-      amount: '৳৪০০',
-      rating: 0,
-      location: 'মিরপুর'
-    }
-  ]);
-
-  const [profileData, setProfileData] = useState({
-    name: 'রহিম উদ্দিন',
-    email: 'rahim@example.com',
-    phone: '+880 1234 567890',
-    location: 'ধানমন্ডি, ঢাকা',
-    bio: 'বৈদ্যুতিক সার্ভিসিং এবং ইনস্টলেশনের ৮ বছরের অভিজ্ঞতা আছে। সব ধরনের ইলেকট্রিক্যাল কাজে দক্ষ।',
-    category: 'electrician',
-    priceRange: '৳৫০০-১৫০০',
-    experience: 8,
-    rating: 4.8,
-    completedJobs: 156,
-    responseTime: '15 মিনিট',
-    languages: ['বাংলা', 'English']
-  });
-
-  const [reviewsList] = useState([
-    {
-      id: 1,
-      customer: 'আহমেদ আলী',
-      service: 'ইলেকট্রিক ওয়্যারিং',
-      rating: 5,
-      comment: 'খুবই ভালো সেবা পেয়েছি। সময়মতো এসেছেন এবং দক্ষতার সাথে কাজ সম্পন্ন করেছেন।',
-      date: '২০২৪-০১-১৫',
-      verified: true
-    },
-    {
-      id: 2,
-      customer: 'ফাতেমা খাতুন',
-      service: 'ফ্যান ইনস্টলেশন',
-      rating: 4,
-      comment: 'ভালো কাজ করেছেন। তবে একটু দেরিতে এসেছিলেন।',
-      date: '২০২৪-০১-১২',
-      verified: true
-    },
-    {
-      id: 3,
-      customer: 'করিম মিয়া',
-      service: 'সুইচবোর্ড মেরামত',
-      rating: 5,
-      comment: 'অসাধারণ কাজ! খুবই পেশাদার এবং বিনয়ী।',
-      date: '২০২৪-০১-১০',
-      verified: true
-    },
-    {
-      id: 4,
-      customer: 'সালমা বেগম',
-      service: 'লাইট রিপেয়ার',
-      rating: 4,
-      comment: 'সন্তোষজনক সেবা। দাম যুক্তিসঙ্গত ছিল।',
-      date: '২০২৪-০১-০৮',
-      verified: false
-    }
-  ]);
-
-  const handleAvailabilityChange = (checked: boolean) => {
-    setIsAvailable(checked);
-    toast({
-      title: 'উপলব্ধতা আপডেট হয়েছে',
-      description: `আপনি এখন বুকিংয়ের জন্য ${checked ? 'উপলব্ধ' : 'অনুপলব্ধ'}।`,
-    });
+  const getTranslation = (key: string): string => {
+    return text[language][key] || key;
   };
 
-  const handleBookingAction = (bookingId: number, action: 'complete' | 'view' | 'cancel' | 'reschedule' | 'contact') => {
-    const booking = recentBookings.find(b => b.id === bookingId);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'confirmed': return 'bg-blue-100 text-blue-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleBookingAction = async (bookingId: string, action: string) => {
+    let newStatus: 'pending' | 'confirmed' | 'completed' | 'cancelled' = 'pending';
     
-    if (action === 'complete') {
-      setRecentBookings(prev => 
-        prev.map(booking => 
-          booking.id === bookingId 
-            ? { ...booking, status: 'completed' }
-            : booking
-        )
-      );
+    switch (action) {
+      case 'গ্রহণ':
+        newStatus = 'confirmed';
+        break;
+      case 'সম্পন্ন':
+        newStatus = 'completed';
+        break;
+      case 'প্রত্যাখ্যান':
+        newStatus = 'cancelled';
+        break;
+    }
+
+    const result = await updateBookingStatus(bookingId, newStatus);
+    
+    if (result.success) {
       toast({
-        title: 'বুকিং সম্পন্ন',
-        description: 'বুকিং সফলভাবে সম্পন্ন হিসেবে চিহ্নিত করা হয়েছে।',
-      });
-    } else if (action === 'cancel') {
-      setRecentBookings(prev => 
-        prev.map(booking => 
-          booking.id === bookingId 
-            ? { ...booking, status: 'cancelled' }
-            : booking
-        )
-      );
-      toast({
-        title: 'বুকিং বাতিল',
-        description: 'বুকিং বাতিল করা হয়েছে।',
-      });
-    } else if (action === 'contact') {
-      toast({
-        title: 'গ্রাহকের সাথে যোগাযোগ',
-        description: `${booking?.customer} এর সাথে যোগাযোগ করা হচ্ছে...`,
-      });
-    } else if (action === 'reschedule') {
-      toast({
-        title: 'বুকিং পুনঃনির্ধারণ',
-        description: 'বুকিং পুনঃনির্ধারণের পৃষ্ঠা খোলা হচ্ছে...',
+        title: 'সফল',
+        description: `বুকিং ${action} করা হয়েছে।`,
       });
     } else {
       toast({
-        title: 'বুকিং বিস্তারিত',
-        description: 'বুকিংয়ের বিস্তারিত তথ্য দেখানো হচ্ছে...',
+        title: 'ত্রুটি',
+        description: 'অপারেশন সম্পন্ন করতে পারা যায়নি।',
+        variant: 'destructive',
       });
     }
   };
 
-  const handleProfileSave = async () => {
-    setIsUpdatingProfile(true);
-    
-    setTimeout(() => {
-      setIsUpdatingProfile(false);
-      toast({
-        title: 'প্রোফাইল আপডেট হয়েছে',
-        description: 'আপনার প্রোফাইল তথ্য সফলভাবে সংরক্ষিত হয়েছে।',
-      });
-    }, 1500);
-  };
-
-  const handleServiceUpdate = () => {
+  const handleAvailabilityToggle = () => {
+    setIsAvailable(!isAvailable);
     toast({
-      title: 'সেবা আপডেট হয়েছে',
-      description: 'আপনার সেবা সেটিংস সফলভাবে আপডেট হয়েছে।',
+      title: 'স্ট্যাটাস আপডেট',
+      description: `আপনি এখন ${!isAvailable ? 'উপলব্ধ' : 'অনুপলব্ধ'} হিসেবে দেখানো হবে।`,
     });
   };
 
-  const handleQuickAction = (action: string) => {
-    const actionMessages = {
-      schedule: 'আপনার সময়সূচী খোলা হচ্ছে...',
-      earnings: 'আয়ের রিপোর্ট তৈরি করা হচ্ছে...',
-      profile: 'প্রোফাইল এডিটর খোলা হচ্ছে...',
-      settings: 'অ্যাকাউন্ট সেটিংস খোলা হচ্ছে...',
-      calendar: 'ক্যালেন্ডার ভিউ খোলা হচ্ছে...',
-      analytics: 'আপনার পারফরম্যান্স বিশ্লেষণ দেখানো হচ্ছে...',
-      support: 'সহায়তা কেন্দ্র খোলা হচ্ছে...',
-      withdraw: 'টাকা তোলার প্রক্রিয়া শুরু হচ্ছে...'
-    };
-    
+  const handleProfileSave = () => {
+    setEditingProfile(false);
     toast({
-      title: 'দ্রুত কার্যক্রম',
-      description: actionMessages[action as keyof typeof actionMessages] || 'কার্যক্রম সম্পাদিত হয়েছে',
+      title: 'প্রোফাইল আপডেট',
+      description: 'আপনার প্রোফাইল সফলভাবে আপডেট হয়েছে।',
     });
   };
 
-  const handleEarningsAction = (action: 'withdraw' | 'statement' | 'tax') => {
-    const actionMessages = {
-      withdraw: 'টাকা তোলার অনুরোধ প্রক্রিয়াধীন...',
-      statement: 'আয়ের বিবৃতি ডাউনলোড হচ্ছে...',
-      tax: 'কর তথ্য তৈরি করা হচ্ছে...'
-    };
-
-    toast({
-      title: 'আয় ব্যবস্থাপনা',
-      description: actionMessages[action],
-    });
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setProfileData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const filteredBookings = recentBookings.filter(booking => {
-    const matchesSearch = booking.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         booking.service.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = bookingFilter === 'all' || booking.status === bookingFilter;
-    return matchesSearch && matchesFilter;
-  });
-
-  const stats = [
+  const statsCards = [
     {
-      title: 'আজকের আয়',
-      value: `৳${earningsData.todayEarnings.toLocaleString()}`,
-      icon: DollarSign,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100',
-      change: '+৳500 গতকাল থেকে'
-    },
-    {
-      title: 'মোট বুকিং',
-      value: profileData.completedJobs.toString(),
+      title: getTranslation('totalBookings'),
+      value: stats.totalBookings.toString(),
       icon: Calendar,
       color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
-      change: '+12 এই মাসে'
+      bgColor: 'bg-blue-100'
     },
     {
-      title: 'গড় রেটিং',
-      value: profileData.rating.toString(),
-      icon: Star,
+      title: getTranslation('completedJobs'),
+      value: stats.completedJobs.toString(),
+      icon: CheckCircle,
+      color: 'text-green-600',
+      bgColor: 'bg-green-100'
+    },
+    {
+      title: getTranslation('pendingBookings'),
+      value: stats.pendingBookings.toString(),
+      icon: Clock,
       color: 'text-yellow-600',
-      bgColor: 'bg-yellow-100',
-      change: '+0.2 গত মাস থেকে'
+      bgColor: 'bg-yellow-100'
     },
     {
-      title: 'মোট রিভিউ',
-      value: '127',
-      icon: MessageCircle,
+      title: getTranslation('totalEarnings'),
+      value: `৳${stats.totalEarnings.toLocaleString()}`,
+      icon: DollarSign,
       color: 'text-purple-600',
-      bgColor: 'bg-purple-100',
-      change: '+8 নতুন রিভিউ'
+      bgColor: 'bg-purple-100'
     }
   ];
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">{text[language].dashboard}</h1>
-              <p className="text-gray-600 mt-2">আপনার সেবা এবং বুকিং পরিচালনা করুন</p>
+              <h1 className="text-3xl font-bold text-gray-800">{getTranslation('dashboard')}</h1>
+              <p className="text-gray-600 mt-2">আপনার সেবা পরিচালনা করুন</p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium">{text[language].availability}:</span>
-                <Switch 
-                  checked={isAvailable} 
-                  onCheckedChange={handleAvailabilityChange}
-                />
-                <span className={`text-sm font-medium ${isAvailable ? 'text-green-600' : 'text-red-600'}`}>
-                  {isAvailable ? text[language].available : text[language].unavailable}
+                <span className="text-sm text-gray-600">
+                  {isAvailable ? getTranslation('available') : getTranslation('unavailable')}
                 </span>
+                <Switch
+                  checked={isAvailable}
+                  onCheckedChange={handleAvailabilityToggle}
+                />
               </div>
-              <Button variant="outline">
+              <Button variant="outline" size="sm">
+                <Bell className="w-4 h-4 mr-2" />
+                {getTranslation('notifications')} ({unreadCount})
+              </Button>
+              <Button variant="outline" size="sm">
                 <Settings className="w-4 h-4 mr-2" />
-                {text[language].settings}
+                {getTranslation('settings')}
               </Button>
             </div>
           </div>
         </div>
 
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
+          {statsCards.map((stat, index) => (
             <Card key={index} className="hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">{stat.title}</p>
                     <p className="text-3xl font-bold text-gray-800">{stat.value}</p>
-                    <p className="text-xs text-green-600 mt-1">{stat.change}</p>
                   </div>
                   <div className={`p-3 rounded-full ${stat.bgColor}`}>
                     <stat.icon className={`w-6 h-6 ${stat.color}`} />
@@ -458,86 +250,128 @@ const ProviderDashboard = () => {
           ))}
         </div>
 
-        <Tabs defaultValue="overview" className="space-y-6">
+        {/* Additional Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">{getTranslation('averageRating')}</p>
+                  <div className="flex items-center mt-2">
+                    <Star className="w-6 h-6 text-yellow-400 fill-yellow-400 mr-2" />
+                    <span className="text-2xl font-bold text-gray-800">{stats.averageRating}</span>
+                    <span className="text-gray-600 ml-1">/ ৫.০</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500">গত মাসের তুলনায়</p>
+                  <p className="text-sm text-green-600 font-medium">+০.২ বৃদ্ধি</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">{getTranslation('responseTime')}</p>
+                  <div className="flex items-center mt-2">
+                    <Clock className="w-6 h-6 text-blue-400 mr-2" />
+                    <span className="text-2xl font-bold text-gray-800">{stats.responseTime}</span>
+                    <span className="text-gray-600 ml-1">মিনিট</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500">গড় প্রতিক্রিয়ার সময়</p>
+                  <p className="text-sm text-green-600 font-medium">দ্রুত</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">{text[language].overview}</TabsTrigger>
-            <TabsTrigger value="bookings">{text[language].bookings}</TabsTrigger>
-            <TabsTrigger value="earnings">{text[language].earnings}</TabsTrigger>
-            <TabsTrigger value="reviews">{text[language].reviews}</TabsTrigger>
-            <TabsTrigger value="profile">{text[language].profile}</TabsTrigger>
+            <TabsTrigger value="overview">{getTranslation('overview')}</TabsTrigger>
+            <TabsTrigger value="bookings">{getTranslation('bookings')}</TabsTrigger>
+            <TabsTrigger value="profile">{getTranslation('profile')}</TabsTrigger>
+            <TabsTrigger value="analytics">{getTranslation('analytics')}</TabsTrigger>
+            <TabsTrigger value="notifications">{getTranslation('notifications')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card className="lg:col-span-2">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>{text[language].recentBookings}</CardTitle>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleQuickAction('calendar')}
-                    >
-                      <Calendar className="w-4 h-4 mr-2" />
-                      {text[language].viewAll}
-                    </Button>
-                  </div>
+                  <CardTitle>সাম্প্রতিক বুকিংসমূহ</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {recentBookings.slice(0, 4).map((booking) => (
-                      <div key={booking.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    {recentBookings.slice(0, 5).map((booking) => (
+                      <div key={booking.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex-1">
-                          <div className="flex items-center space-x-3">
-                            <div>
-                              <p className="font-medium">{booking.customer}</p>
-                              <p className="text-sm text-gray-600">{booking.service}</p>
-                              <div className="flex items-center space-x-2 mt-1">
-                                <Clock className="w-3 h-3 text-gray-400" />
-                                <p className="text-xs text-gray-500">{booking.date} • {booking.time}</p>
-                                <MapPin className="w-3 h-3 text-gray-400 ml-2" />
-                                <p className="text-xs text-gray-500">{booking.location}</p>
-                              </div>
-                            </div>
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-medium">{booking.customer_name}</h4>
+                            <Badge className={getStatusColor(booking.status || 'pending')}>
+                              {getTranslation(booking.status || 'pending')}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-1">{booking.description}</p>
+                          <div className="flex items-center text-xs text-gray-500 space-x-4">
+                            <span className="flex items-center">
+                              <Calendar className="w-3 h-3 mr-1" />
+                              {booking.selected_date}
+                            </span>
+                            <span className="flex items-center">
+                              <Clock className="w-3 h-3 mr-1" />
+                              {booking.selected_time}
+                            </span>
+                            <span className="flex items-center">
+                              <MapPin className="w-3 h-3 mr-1" />
+                              {booking.address}
+                            </span>
                           </div>
                         </div>
-                        <div className="text-right space-y-2">
-                          <p className="font-semibold text-green-600">{booking.amount}</p>
-                          <Badge variant={
-                            booking.status === 'completed' ? 'secondary' : 
-                            booking.status === 'upcoming' ? 'default' :
-                            booking.status === 'cancelled' ? 'destructive' : 'outline'
-                          }>
-                            {booking.status === 'completed' ? 'সম্পন্ন' :
-                             booking.status === 'upcoming' ? 'আসন্ন' :
-                             booking.status === 'cancelled' ? 'বাতিল' : booking.status}
-                          </Badge>
-                          <div className="flex space-x-1">
-                            <Button 
-                              size="sm" 
-                              variant="ghost"
-                              onClick={() => handleBookingAction(booking.id, 'view')}
-                            >
-                              <Eye className="w-3 h-3" />
-                            </Button>
-                            {booking.status === 'upcoming' && (
+                        <div className="flex space-x-2 ml-4">
+                          {booking.status === 'pending' && (
+                            <>
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleBookingAction(booking.id, 'গ্রহণ')}
+                              >
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                {getTranslation('accept')}
+                              </Button>
                               <Button 
                                 size="sm" 
                                 variant="outline"
-                                onClick={() => handleBookingAction(booking.id, 'contact')}
+                                onClick={() => handleBookingAction(booking.id, 'প্রত্যাখ্যান')}
                               >
-                                <Phone className="w-3 h-3" />
+                                <XCircle className="w-3 h-3 mr-1" />
+                                {getTranslation('reject')}
                               </Button>
-                            )}
-                          </div>
+                            </>
+                          )}
+                          {booking.status === 'confirmed' && (
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleBookingAction(booking.id, 'সম্পন্ন')}
+                            >
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              {getTranslation('complete')}
+                            </Button>
+                          )}
+                          <Button size="sm" variant="ghost">
+                            <Phone className="w-3 h-3" />
+                          </Button>
+                          <Button size="sm" variant="ghost">
+                            <MessageCircle className="w-3 h-3" />
+                          </Button>
                         </div>
                       </div>
                     ))}
-                  </div>
-                  <div className="mt-4">
-                    <Button variant="outline" className="w-full">
-                      {text[language].viewAll}
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -545,71 +379,40 @@ const ProviderDashboard = () => {
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>{text[language].quickActions}</CardTitle>
+                    <CardTitle>আজকের পরিসংখ্যান</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Button 
-                      className="w-full justify-start" 
-                      variant="outline"
-                      onClick={() => handleQuickAction('schedule')}
-                    >
-                      <Calendar className="w-4 h-4 mr-2" />
-                      {text[language].viewAll}
-                    </Button>
-                    <Button 
-                      className="w-full justify-start" 
-                      variant="outline"
-                      onClick={() => handleQuickAction('earnings')}
-                    >
-                      <TrendingUp className="w-4 h-4 mr-2" />
-                      {text[language].earnings}
-                    </Button>
-                    <Button 
-                      className="w-full justify-start" 
-                      variant="outline"
-                      onClick={() => handleQuickAction('profile')}
-                    >
-                      <User className="w-4 h-4 mr-2" />
-                      {text[language].profile}
-                    </Button>
-                    <Button 
-                      className="w-full justify-start" 
-                      variant="outline"
-                      onClick={() => handleQuickAction('analytics')}
-                    >
-                      <TrendingUp className="w-4 h-4 mr-2" />
-                      {text[language].serviceAnalytics}
-                    </Button>
-                    <Button 
-                      className="w-full justify-start" 
-                      variant="outline"
-                      onClick={() => handleQuickAction('support')}
-                    >
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      {text[language].customerReviews}
-                    </Button>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <span className="text-sm font-medium">নতুন বুকিং</span>
+                      <span className="text-xl font-bold text-blue-600">৩</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <span className="text-sm font-medium">সম্পন্ন কাজ</span>
+                      <span className="text-xl font-bold text-green-600">৫</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                      <span className="text-sm font-medium">আজকের আয়</span>
+                      <span className="text-xl font-bold text-purple-600">৳৪,৫০০</span>
+                    </div>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>{text[language].earnings}</CardTitle>
+                    <CardTitle>দ্রুত কার্যক্রম</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="p-3 bg-green-50 rounded-lg">
-                      <p className="text-sm text-gray-600">{text[language].totalEarningsThisMonth}</p>
-                      <p className="text-xl font-bold text-green-600">৳{earningsData.monthlyEarnings.toLocaleString()}</p>
-                    </div>
-                    <div className="p-3 bg-blue-50 rounded-lg">
-                      <p className="text-sm text-gray-600">{text[language].pendingPayments}</p>
-                      <p className="text-xl font-bold text-blue-600">৳{earningsData.pendingPayments.toLocaleString()}</p>
-                    </div>
-                    <Button 
-                      className="w-full"
-                      onClick={() => handleEarningsAction('withdraw')}
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      {text[language].withdraw}
+                  <CardContent className="space-y-2">
+                    <Button variant="outline" className="w-full justify-start" size="sm">
+                      <Eye className="w-4 h-4 mr-2" />
+                      সব বুকিং দেখুন
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start" size="sm">
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      আয়ের রিপোর্ট
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start" size="sm">
+                      <Settings className="w-4 h-4 mr-2" />
+                      প্রোফাইল আপডেট
                     </Button>
                   </CardContent>
                 </Card>
@@ -620,173 +423,304 @@ const ProviderDashboard = () => {
           <TabsContent value="bookings">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>{text[language].bookings}</CardTitle>
-                  <div className="flex items-center space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleQuickAction('calendar')}
-                    >
-                      <Calendar className="w-4 h-4 mr-2" />
-                      {text[language].viewAll}
-                    </Button>
-                  </div>
-                </div>
+                <CardTitle>সব বুকিংসমূহ</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center space-x-4 mb-6">
-                  <div className="flex-1">
-                    <Input
-                      placeholder="গ্রাহক বা সেবা অনুসন্ধান করুন..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="max-w-sm"
-                    />
-                  </div>
-                  <Select value={bookingFilter} onValueChange={setBookingFilter}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="স্ট্যাটাস ফিল্টার" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{text[language].viewAll}</SelectItem>
-                      <SelectItem value="upcoming">{text[language].upcomingBookings}</SelectItem>
-                      <SelectItem value="completed">{text[language].completedBookings}</SelectItem>
-                      <SelectItem value="cancelled">{text[language].cancel}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{text[language].customer}</TableHead>
-                      <TableHead>{text[language].service}</TableHead>
-                      <TableHead>{text[language].dateAndTime}</TableHead>
-                      <TableHead>{text[language].location}</TableHead>
-                      <TableHead>{text[language].amount}</TableHead>
-                      <TableHead>{text[language].status}</TableHead>
-                      <TableHead>{text[language].rating}</TableHead>
-                      <TableHead>{text[language].actions}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredBookings.map((booking) => (
-                      <TableRow key={booking.id}>
-                        <TableCell className="font-medium">{booking.customer}</TableCell>
-                        <TableCell>{booking.service}</TableCell>
-                        <TableCell>{booking.date} • {booking.time}</TableCell>
-                        <TableCell>{booking.location}</TableCell>
-                        <TableCell className="text-green-600 font-semibold">{booking.amount}</TableCell>
-                        <TableCell>
-                          <Badge variant={
-                            booking.status === 'completed' ? 'secondary' : 
-                            booking.status === 'upcoming' ? 'default' :
-                            booking.status === 'cancelled' ? 'destructive' : 'outline'
-                          }>
-                            {booking.status === 'completed' ? 'সম্পন্ন' :
-                             booking.status === 'upcoming' ? 'আসন্ন' :
-                             booking.status === 'cancelled' ? 'বাতিল' : booking.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {booking.rating > 0 ? (
-                            <div className="flex items-center">
-                              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 mr-1" />
-                              <span className="ml-1 text-sm">{booking.rating}</span>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400 text-sm">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-1">
-                            <Button 
-                              size="sm" 
-                              variant="ghost"
-                              onClick={() => handleBookingAction(booking.id, 'view')}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            {booking.status === 'upcoming' && (
-                              <>
-                                <Button 
-                                  size="sm" 
-                                  variant="default" 
-                                  className="bg-green-600 hover:bg-green-700"
-                                  onClick={() => handleBookingAction(booking.id, 'complete')}
-                                >
-                                  {text[language].complete}
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => handleBookingAction(booking.id, 'reschedule')}
-                                >
-                                  {text[language].reschedule}
-                                </Button>
-                              </>
-                            )}
-                            {booking.status !== 'completed' && booking.status !== 'cancelled' && (
-                              <Button 
-                                size="sm" 
-                                variant="destructive"
-                                onClick={() => handleBookingAction(booking.id, 'cancel')}
-                              >
-                                {text[language].cancel}
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
+                {loading ? (
+                  <div className="text-center py-8">লোড হচ্ছে...</div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{getTranslation('customer')}</TableHead>
+                        <TableHead>{getTranslation('date')}</TableHead>
+                        <TableHead>{getTranslation('time')}</TableHead>
+                        <TableHead>বিবরণ</TableHead>
+                        <TableHead>{getTranslation('amount')}</TableHead>
+                        <TableHead>{getTranslation('status')}</TableHead>
+                        <TableHead>{getTranslation('actions')}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {recentBookings.map((booking) => (
+                        <TableRow key={booking.id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{booking.customer_name}</p>
+                              <p className="text-sm text-gray-600">{booking.customer_phone}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>{booking.selected_date}</TableCell>
+                          <TableCell>{booking.selected_time}</TableCell>
+                          <TableCell>
+                            <p className="text-sm">{booking.description}</p>
+                            <p className="text-xs text-gray-500">{booking.address}</p>
+                          </TableCell>
+                          <TableCell>৳{booking.total_price}</TableCell>
+                          <TableCell>
+                            <Badge className={getStatusColor(booking.status || 'pending')}>
+                              {getTranslation(booking.status || 'pending')}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-1">
+                              {booking.status === 'pending' && (
+                                <>
+                                  <Button 
+                                    size="sm" 
+                                    onClick={() => handleBookingAction(booking.id, 'গ্রহণ')}
+                                  >
+                                    গ্রহণ
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => handleBookingAction(booking.id, 'প্রত্যাখ্যান')}
+                                  >
+                                    প্রত্যাখ্যান
+                                  </Button>
+                                </>
+                              )}
+                              {booking.status === 'confirmed' && (
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => handleBookingAction(booking.id, 'সম্পন্ন')}
+                                >
+                                  সম্পন্ন
+                                </Button>
+                              )}
+                              <Button size="sm" variant="ghost">
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="earnings">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>{text[language].earnings}</CardTitle>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEarningsAction('statement')}
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        {text[language].viewAll}
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEarningsAction('tax')}
-                      >
-                        {text[language].tax}
-                      </Button>
-                    </div>
+          <TabsContent value="profile">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>প্রোফাইল তথ্য</CardTitle>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => editingProfile ? handleProfileSave() : setEditingProfile(true)}
+                  >
+                    {editingProfile ? (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        {getTranslation('save')}
+                      </>
+                    ) : (
+                      <>
+                        <Edit className="w-4 h-4 mr-2" />
+                        {getTranslation('edit')}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{getTranslation('name')} (বাংলা)</label>
+                    {editingProfile ? (
+                      <Input 
+                        value={profile.name} 
+                        onChange={(e) => setProfile({...profile, name: e.target.value})}
+                      />
+                    ) : (
+                      <p className="text-gray-800">{profile.name}</p>
+                    )}
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{getTranslation('name')} (English)</label>
+                    {editingProfile ? (
+                      <Input 
+                        value={profile.nameEn} 
+                        onChange={(e) => setProfile({...profile, nameEn: e.target.value})}
+                      />
+                    ) : (
+                      <p className="text-gray-800">{profile.nameEn}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{getTranslation('phone')}</label>
+                    {editingProfile ? (
+                      <Input 
+                        value={profile.phone} 
+                        onChange={(e) => setProfile({...profile, phone: e.target.value})}
+                      />
+                    ) : (
+                      <p className="text-gray-800">{profile.phone}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{getTranslation('category')}</label>
+                    {editingProfile ? (
+                      <Select 
+                        value={profile.category} 
+                        onValueChange={(value) => setProfile({...profile, category: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="electrician">ইলেকট্রিশিয়ান</SelectItem>
+                          <SelectItem value="plumber">প্লাম্বার</SelectItem>
+                          <SelectItem value="cleaner">ক্লিনার</SelectItem>
+                          <SelectItem value="ac-repair">এসি মেরামত</SelectItem>
+                          <SelectItem value="painter">রঙমিস্ত্রি</SelectItem>
+                          <SelectItem value="carpenter">কাঠমিস্ত্রি</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="text-gray-800">ইলেকট্রিশিয়ান</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{getTranslation('experience')} (বছর)</label>
+                    {editingProfile ? (
+                      <Input 
+                        type="number"
+                        value={profile.experience} 
+                        onChange={(e) => setProfile({...profile, experience: parseInt(e.target.value)})}
+                      />
+                    ) : (
+                      <p className="text-gray-800">{profile.experience} বছর</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{getTranslation('price')}</label>
+                    {editingProfile ? (
+                      <Input 
+                        value={profile.price} 
+                        onChange={(e) => setProfile({...profile, price: e.target.value})}
+                      />
+                    ) : (
+                      <p className="text-gray-800">{profile.price}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{getTranslation('location')} (বাংলা)</label>
+                    {editingProfile ? (
+                      <Input 
+                        value={profile.location} 
+                        onChange={(e) => setProfile({...profile, location: e.target.value})}
+                      />
+                    ) : (
+                      <p className="text-gray-800">{profile.location}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{getTranslation('location')} (English)</label>
+                    {editingProfile ? (
+                      <Input 
+                        value={profile.locationEn} 
+                        onChange={(e) => setProfile({...profile, locationEn: e.target.value})}
+                      />
+                    ) : (
+                      <p className="text-gray-800">{profile.locationEn}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">{getTranslation('description')} (বাংলা)</label>
+                  {editingProfile ? (
+                    <Textarea 
+                      value={profile.description} 
+                      onChange={(e) => setProfile({...profile, description: e.target.value})}
+                      rows={3}
+                    />
+                  ) : (
+                    <p className="text-gray-800">{profile.description}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">{getTranslation('description')} (English)</label>
+                  {editingProfile ? (
+                    <Textarea 
+                      value={profile.descriptionEn} 
+                      onChange={(e) => setProfile({...profile, descriptionEn: e.target.value})}
+                      rows={3}
+                    />
+                  ) : (
+                    <p className="text-gray-800">{profile.descriptionEn}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">{getTranslation('specialties')} (বাংলা)</label>
+                  {editingProfile ? (
+                    <Input 
+                      value={profile.specialties.join(', ')} 
+                      onChange={(e) => setProfile({...profile, specialties: e.target.value.split(', ')})}
+                      placeholder="বিশেষত্বগুলো কমা দিয়ে আলাদা করুন"
+                    />
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {profile.specialties.map((specialty, index) => (
+                        <Badge key={index} variant="outline">{specialty}</Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">{getTranslation('specialties')} (English)</label>
+                  {editingProfile ? (
+                    <Input 
+                      value={profile.specialtiesEn.join(', ')} 
+                      onChange={(e) => setProfile({...profile, specialtiesEn: e.target.value.split(', ')})}
+                      placeholder="Separate specialties with commas"
+                    />
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {profile.specialtiesEn.map((specialty, index) => (
+                        <Badge key={index} variant="outline">{specialty}</Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {editingProfile && (
+                  <div className="flex space-x-4">
+                    <Button onClick={handleProfileSave}>
+                      <Save className="w-4 h-4 mr-2" />
+                      সংরক্ষণ করুন
+                    </Button>
+                    <Button variant="outline" onClick={() => setEditingProfile(false)}>
+                      বাতিল
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>আয়ের গ্রাফ</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-80 flex items-center justify-center bg-gray-50 rounded-md border border-dashed border-gray-300">
                     <div className="text-center p-6">
                       <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-600 mb-2">আয়ের চার্ট</h3>
-                      <p className="text-gray-500 mb-4">মাসিক আয়ের তথ্য এখানে প্রদর্শিত হবে</p>
-                      <div className="grid grid-cols-2 gap-4 mt-6">
-                        <div className="p-3 bg-green-50 rounded-lg">
-                          <p className="text-sm text-gray-600">গড় দৈনিক আয়</p>
-                          <p className="text-xl font-bold text-green-600">৳{Math.round(earningsData.monthlyEarnings / 30).toLocaleString()}</p>
-                        </div>
-                        <div className="p-3 bg-blue-50 rounded-lg">
-                          <p className="text-sm text-gray-600">গড় বুকিং মূল্য</p>
-                          <p className="text-xl font-bold text-blue-600">৳{earningsData.avgBookingValue}</p>
-                        </div>
-                      </div>
+                      <p className="text-gray-500">মাসিক আয়ের তথ্য এখানে প্রদর্শিত হবে</p>
                     </div>
                   </div>
                 </CardContent>
@@ -794,256 +728,107 @@ const ProviderDashboard = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>{text[language].earningsSummary}</CardTitle>
+                  <CardTitle>বুকিং প্রবণতা</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="p-4 bg-green-50 rounded-lg">
-                    <p className="text-sm text-gray-600">{text[language].totalEarningsThisMonth}</p>
-                    <p className="text-2xl font-bold text-green-600">৳{earningsData.monthlyEarnings.toLocaleString()}</p>
-                    <p className="text-xs text-green-600 mt-1">+15% গত মাস থেকে</p>
-                  </div>
-                  
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-gray-600">{text[language].weeklyEarnings}</p>
-                    <p className="text-2xl font-bold text-blue-600">৳{earningsData.weeklyEarnings.toLocaleString()}</p>
-                    <p className="text-xs text-blue-600 mt-1">+8% গত সপ্তাহ থেকে</p>
-                  </div>
-
-                  <div className="p-4 bg-yellow-50 rounded-lg">
-                    <p className="text-sm text-gray-600">{text[language].pendingPayments}</p>
-                    <p className="text-2xl font-bold text-yellow-600">৳{earningsData.pendingPayments.toLocaleString()}</p>
-                    <p className="text-xs text-gray-500 mt-1">প্রক্রিয়াধীন</p>
-                  </div>
-
-                  <div className="p-4 bg-purple-50 rounded-lg">
-                    <p className="text-sm text-gray-600">{text[language].totalEarnings}</p>
-                    <p className="text-2xl font-bold text-purple-600">৳{earningsData.totalEarnings.toLocaleString()}</p>
-                    <p className="text-xs text-gray-500 mt-1">শুরু থেকে</p>
-                  </div>
-
-                  <div className="space-y-2 pt-4">
-                    <Button 
-                      className="w-full"
-                      onClick={() => handleEarningsAction('withdraw')}
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      {text[language].withdraw}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                      onClick={() => handleEarningsAction('statement')}
-                    >
-                      <TrendingUp className="w-4 h-4 mr-2" />
-                      {text[language].viewAll}
-                    </Button>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-3 bg-blue-50 rounded-lg">
+                        <p className="text-sm text-gray-600">এই সপ্তাহ</p>
+                        <p className="text-xl font-bold text-blue-600">১২</p>
+                        <p className="text-xs text-green-600">+২০% বৃদ্ধি</p>
+                      </div>
+                      <div className="p-3 bg-green-50 rounded-lg">
+                        <p className="text-sm text-gray-600">এই মাস</p>
+                        <p className="text-xl font-bold text-green-600">৪৮</p>
+                        <p className="text-xs text-green-600">+১৫% বৃদ্ধি</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <h4 className="font-medium">জনপ্রিয় সেবা</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">ফ্যান ইনস্টলেশন</span>
+                          <div className="flex items-center">
+                            <div className="w-20 h-2 bg-gray-200 rounded-full mr-2">
+                              <div className="w-16 h-2 bg-blue-500 rounded-full"></div>
+                            </div>
+                            <span className="text-xs text-gray-600">৮০%</span>
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">বাড়ির তার</span>
+                          <div className="flex items-center">
+                            <div className="w-20 h-2 bg-gray-200 rounded-full mr-2">
+                              <div className="w-12 h-2 bg-green-500 rounded-full"></div>
+                            </div>
+                            <span className="text-xs text-gray-600">৬০%</span>
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">আলো মেরামত</span>
+                          <div className="flex items-center">
+                            <div className="w-20 h-2 bg-gray-200 rounded-full mr-2">
+                              <div className="w-8 h-2 bg-yellow-500 rounded-full"></div>
+                            </div>
+                            <span className="text-xs text-gray-600">৪০%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
 
-          <TabsContent value="reviews">
+          <TabsContent value="notifications">
             <Card>
               <CardHeader>
-                <CardTitle>{text[language].customerReviews}</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>{getTranslation('notifications')}</CardTitle>
+                  <Button variant="outline" size="sm" onClick={markAllAsRead}>
+                    সব পড়া হিসেবে চিহ্নিত করুন
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
-                  {reviewsList.map((review) => (
-                    <div key={review.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="flex justify-between">
-                        <div>
-                          <h3 className="font-medium">{review.customer}</h3>
-                          <p className="text-sm text-gray-500">{review.service} • {review.date}</p>
+                <div className="space-y-4">
+                  {notifications.map((notification) => (
+                    <div 
+                      key={notification.id} 
+                      className={`p-4 rounded-lg border ${notification.read ? 'bg-white' : 'bg-blue-50 border-blue-200'}`}
+                      onClick={() => markAsRead(notification.id)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <h4 className="font-medium">{notification.title}</h4>
+                            {!notification.read && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">{notification.message}</p>
+                          <p className="text-xs text-gray-500">{notification.createdAt}</p>
                         </div>
-                        <div className="flex items-center">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-                            />
-                          ))}
-                          <span className="ml-2 text-sm font-medium">{review.rating}/5</span>
-                        </div>
-                      </div>
-                      <p className="text-gray-600 mt-2">{review.comment}</p>
-                      <div className="flex items-center justify-between mt-3">
-                        <span className="text-xs text-gray-400">সহায়ক ছিল?</span>
-                        <Button variant="ghost" size="sm">
-                          জবাব দিন
-                        </Button>
+                        <Badge 
+                          variant={
+                            notification.type === 'success' ? 'secondary' :
+                            notification.type === 'warning' ? 'outline' :
+                            notification.type === 'error' ? 'destructive' : 'default'
+                          }
+                        >
+                          {notification.type === 'success' ? 'সফল' :
+                           notification.type === 'warning' ? 'সতর্কতা' :
+                           notification.type === 'error' ? 'ত্রুটি' : 'তথ্য'}
+                        </Badge>
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="mt-6">
-                  <Button variant="outline" className="w-full">
-                    আরও রিভিউ লোড করুন
-                  </Button>
-                </div>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="profile">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle>{text[language].personalInfo}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <Label htmlFor="name">নাম</Label>
-                      <Input 
-                        id="name" 
-                        value={profileData.name} 
-                        onChange={(e) => handleInputChange('name', e.target.value)}
-                        className="mt-1" 
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="email">ইমেইল</Label>
-                      <Input 
-                        id="email" 
-                        value={profileData.email} 
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        className="mt-1" 
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="phone">ফোন</Label>
-                      <Input 
-                        id="phone" 
-                        value={profileData.phone} 
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
-                        className="mt-1" 
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="location">এলাকা</Label>
-                      <Input 
-                        id="location" 
-                        value={profileData.location} 
-                        onChange={(e) => handleInputChange('location', e.target.value)}
-                        className="mt-1" 
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="experience">অভিজ্ঞতা (বছর)</Label>
-                      <Input 
-                        id="experience" 
-                        type="number"
-                        value={profileData.experience} 
-                        onChange={(e) => handleInputChange('experience', e.target.value)}
-                        className="mt-1" 
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="responseTime">প্রতিক্রিয়ার সময়</Label>
-                      <Input 
-                        id="responseTime" 
-                        value={profileData.responseTime} 
-                        onChange={(e) => handleInputChange('responseTime', e.target.value)}
-                        className="mt-1" 
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <Label htmlFor="bio">পরিচিতি</Label>
-                      <Textarea
-                        id="bio"
-                        value={profileData.bio}
-                        onChange={(e) => handleInputChange('bio', e.target.value)}
-                        className="mt-1"
-                        rows={4}
-                      />
-                    </div>
-                  </div>
-                  <div className="mt-6">
-                    <Button 
-                      onClick={handleProfileSave}
-                      disabled={isUpdatingProfile}
-                    >
-                      {isUpdatingProfile ? (
-                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                      )}
-                      পরিবর্তন সংরক্ষণ করুন
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{text[language].serviceSettings}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label htmlFor="category">ক্যাটেগরি</Label>
-                      <Select 
-                        value={profileData.category} 
-                        onValueChange={(value) => handleInputChange('category', value)}
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="ক্যাটেগরি নির্বাচন করুন" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="electrician">ইলেকট্রিশিয়ান</SelectItem>
-                          <SelectItem value="plumber">প্লাম্বার</SelectItem>
-                          <SelectItem value="ac-repair">এসি মেরামত</SelectItem>
-                          <SelectItem value="cleaner">ক্লিনার</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="priceRange">মূল্য পরিসীমা</Label>
-                      <Input 
-                        id="priceRange" 
-                        value={profileData.priceRange} 
-                        onChange={(e) => handleInputChange('priceRange', e.target.value)}
-                        className="mt-1" 
-                      />
-                    </div>
-                    <div className="mt-4">
-                      <Button variant="outline" className="w-full" onClick={handleServiceUpdate}>
-                        সেবা আপডেট করুন
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{text[language].accountSettings}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start"
-                      onClick={() => handleQuickAction('settings')}
-                    >
-                      <Settings className="w-4 h-4 mr-2" />
-                      {text[language].notificationSettings}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start"
-                      onClick={() => handleQuickAction('settings')}
-                    >
-                      <Shield className="w-4 h-4 mr-2" />
-                      {text[language].paymentSettings}
-                    </Button>
-                    <Button variant="destructive" className="w-full justify-start">
-                      লগ আউট
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
           </TabsContent>
         </Tabs>
       </div>
