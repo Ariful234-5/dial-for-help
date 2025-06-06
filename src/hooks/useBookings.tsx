@@ -2,21 +2,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 
-export interface Booking {
-  id: string;
-  customer_id: string;
-  provider_id: string;
-  customer_name: string;
-  customer_phone: string;
-  address: string;
-  description?: string;
-  selected_date: string;
-  selected_time: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  total_price?: number;
-  created_at: string;
-}
+export type Booking = Tables<'bookings'>;
+export type BookingInsert = TablesInsert<'bookings'>;
 
 export const useBookings = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -48,7 +37,7 @@ export const useBookings = () => {
     }
   };
 
-  const createBooking = async (bookingData: Omit<Booking, 'id' | 'created_at' | 'customer_id'>) => {
+  const createBooking = async (bookingData: Omit<BookingInsert, 'id' | 'created_at' | 'updated_at' | 'customer_id'>) => {
     if (!user) throw new Error('User not authenticated');
 
     const { data, error } = await supabase
