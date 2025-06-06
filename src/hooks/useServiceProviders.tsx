@@ -33,7 +33,7 @@ export const useServiceProviders = () => {
   const fetchProviders = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('service_providers')
         .select('*')
         .order('rating', { ascending: false });

@@ -25,11 +25,14 @@ export const useBookings = () => {
   const { user } = useAuth();
 
   const fetchBookings = async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('bookings')
         .select('*')
         .eq('customer_id', user.id)
@@ -48,7 +51,7 @@ export const useBookings = () => {
   const createBooking = async (bookingData: Omit<Booking, 'id' | 'created_at' | 'customer_id'>) => {
     if (!user) throw new Error('User not authenticated');
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('bookings')
       .insert([{
         ...bookingData,
@@ -64,7 +67,9 @@ export const useBookings = () => {
   };
 
   useEffect(() => {
-    fetchBookings();
+    if (user) {
+      fetchBookings();
+    }
   }, [user]);
 
   return {
