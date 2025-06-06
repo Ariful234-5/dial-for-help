@@ -9,7 +9,137 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          address: string
+          created_at: string
+          customer_id: string
+          customer_name: string
+          customer_phone: string
+          description: string | null
+          id: string
+          provider_id: string
+          selected_date: string
+          selected_time: string
+          status: string | null
+          total_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          customer_id: string
+          customer_name: string
+          customer_phone: string
+          description?: string | null
+          id?: string
+          provider_id: string
+          selected_date: string
+          selected_time: string
+          status?: string | null
+          total_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          customer_id?: string
+          customer_name?: string
+          customer_phone?: string
+          description?: string | null
+          id?: string
+          provider_id?: string
+          selected_date?: string
+          selected_time?: string
+          status?: string | null
+          total_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_providers: {
+        Row: {
+          available: boolean | null
+          category: string
+          created_at: string
+          description: string | null
+          description_en: string | null
+          distance: number | null
+          experience: number
+          id: string
+          image: string | null
+          location: string
+          location_en: string
+          name: string
+          name_en: string
+          phone: string
+          price: string
+          price_en: string
+          rating: number | null
+          reviews_count: number | null
+          specialties: string[] | null
+          specialties_en: string[] | null
+          updated_at: string
+          verified: boolean | null
+        }
+        Insert: {
+          available?: boolean | null
+          category: string
+          created_at?: string
+          description?: string | null
+          description_en?: string | null
+          distance?: number | null
+          experience: number
+          id?: string
+          image?: string | null
+          location: string
+          location_en: string
+          name: string
+          name_en: string
+          phone: string
+          price: string
+          price_en: string
+          rating?: number | null
+          reviews_count?: number | null
+          specialties?: string[] | null
+          specialties_en?: string[] | null
+          updated_at?: string
+          verified?: boolean | null
+        }
+        Update: {
+          available?: boolean | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          description_en?: string | null
+          distance?: number | null
+          experience?: number
+          id?: string
+          image?: string | null
+          location?: string
+          location_en?: string
+          name?: string
+          name_en?: string
+          phone?: string
+          price?: string
+          price_en?: string
+          rating?: number | null
+          reviews_count?: number | null
+          specialties?: string[] | null
+          specialties_en?: string[] | null
+          updated_at?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

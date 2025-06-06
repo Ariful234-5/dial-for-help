@@ -32,7 +32,7 @@ export const useBookings = () => {
 
     try {
       setLoading(true);
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('bookings')
         .select('*')
         .eq('customer_id', user.id)
@@ -51,7 +51,7 @@ export const useBookings = () => {
   const createBooking = async (bookingData: Omit<Booking, 'id' | 'created_at' | 'customer_id'>) => {
     if (!user) throw new Error('User not authenticated');
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('bookings')
       .insert([{
         ...bookingData,
