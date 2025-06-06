@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Star, MapPin, Phone, MessageCircle, Filter, Search, Clock, Shield, Zap, Users, Award, Globe, Settings, User } from 'lucide-react';
+import { Star, MapPin, Phone, MessageCircle, Filter, Search, Clock, Shield, Zap, Users, Award, Globe, Settings, User, LogIn, LogOut } from 'lucide-react';
 import { ServiceProviderCard } from "@/components/ServiceProviderCard";
 import { ServiceProviderProfile } from "@/components/ServiceProviderProfile";
 import { LocationPicker } from "@/components/LocationPicker";
@@ -16,11 +16,15 @@ import { AdvancedBookingModal } from "@/components/AdvancedBookingModal";
 import { EmergencyService } from "@/components/EmergencyService";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { ServiceHistory } from "@/components/ServiceHistory";
+import { AuthModal } from "@/components/AuthModal";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useServiceProviders } from "@/hooks/useServiceProviders";
+import { Toaster } from "@/components/ui/toaster";
 
 const Index = () => {
-  // ... keep existing code (state variables, text object, categories, serviceProviders)
-  
+  const { user, signOut } = useAuth();
+  const { providers: dbProviders, loading: providersLoading } = useServiceProviders();
   const [language, setLanguage] = useState('bn');
   const [location, setLocation] = useState({ lat: 23.8103, lng: 90.4125, address: "ঢাকা, বাংলাদেশ" });
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,6 +35,7 @@ const Index = () => {
   const [showChatModal, setShowChatModal] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -55,7 +60,10 @@ const Index = () => {
       years: "বছর",
       admin: "অ্যাডমিন",
       provider: "প্রদানকারী",
-      profile: "প্রোফাইল"
+      profile: "প্রোফাইল",
+      login: "লগইন",
+      logout: "লগআউট",
+      welcome: "স্বাগতম"
     },
     en: {
       title: "Pro Local Connect",
@@ -77,7 +85,10 @@ const Index = () => {
       years: "years",
       admin: "Admin",
       provider: "Provider",
-      profile: "Profile"
+      profile: "Profile",
+      login: "Login",
+      logout: "Logout",
+      welcome: "Welcome"
     }
   };
 
@@ -92,84 +103,28 @@ const Index = () => {
     { id: 'painter', name: { bn: 'রং মিস্ত্রি', en: 'Painter' }, icon: '🎨' }
   ];
 
-  const serviceProviders = [
-    {
-      id: 1,
-      name: "রহিম উদ্দিন",
-      nameEn: "Rahim Uddin",
-      category: "electrician",
-      rating: 4.8,
-      reviews: 127,
-      experience: 8,
-      location: "ধানমন্ডি",
-      locationEn: "Dhanmondi",
-      distance: 2.3,
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-      verified: true,
-      available: true,
-      price: "৳৫০০-১৫০০",
-      priceEn: "৳500-1500",
-      specialties: ["ঘরোয়া ওয়্যারিং", "ফ্যান ইনস্টল", "সুইচবোর্ড"],
-      specialtiesEn: ["Home Wiring", "Fan Installation", "Switchboard"]
-    },
-    {
-      id: 2,
-      name: "ডা. ফাতেমা খাতুন",
-      nameEn: "Dr. Fatema Khatun",
-      category: "doctor",
-      rating: 4.9,
-      reviews: 89,
-      experience: 12,
-      location: "গুলশান",
-      locationEn: "Gulshan",
-      distance: 4.1,
-      image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
-      verified: true,
-      available: false,
-      price: "৳৮০০-২০০০",
-      priceEn: "৳800-2000",
-      specialties: ["সাধারণ চিকিৎসা", "শিশু রোগ", "জ্বর কাশি"],
-      specialtiesEn: ["General Medicine", "Pediatrics", "Fever & Cough"]
-    },
-    {
-      id: 3,
-      name: "করিম মিয়া",
-      nameEn: "Karim Mia",
-      category: "plumber",
-      rating: 4.6,
-      reviews: 156,
-      experience: 6,
-      location: "মিরপুর",
-      locationEn: "Mirpur",
-      distance: 3.7,
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      verified: true,
-      available: true,
-      price: "৳৩০০-১২০০",
-      priceEn: "৳300-1200",
-      specialties: ["পানির লাইন", "বাথরুম ফিক্স", "ড্রেনেজ"],
-      specialtiesEn: ["Water Line", "Bathroom Fix", "Drainage"]
-    },
-    {
-      id: 4,
-      name: "হাসান আলী",
-      nameEn: "Hasan Ali",
-      category: "ac-repair",
-      rating: 4.7,
-      reviews: 93,
-      experience: 5,
-      location: "উত্তরা",
-      locationEn: "Uttara",
-      distance: 6.2,
-      image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
-      verified: false,
-      available: true,
-      price: "৳৬০০-২৫০০",
-      priceEn: "৳600-2500",
-      specialties: ["AC সার্ভিসিং", "রেফ্রিজারেটর", "কুলার"],
-      specialtiesEn: ["AC Servicing", "Refrigerator", "Cooler"]
-    }
-  ];
+  const serviceProviders = dbProviders.map(provider => ({
+    id: provider.id,
+    name: provider.name,
+    nameEn: provider.name_en,
+    category: provider.category,
+    rating: provider.rating,
+    reviews: provider.reviews_count,
+    experience: provider.experience,
+    location: provider.location,
+    locationEn: provider.location_en,
+    distance: provider.distance || 2.3,
+    image: provider.image || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+    verified: provider.verified,
+    available: provider.available,
+    price: provider.price,
+    priceEn: provider.price_en,
+    specialties: provider.specialties,
+    specialtiesEn: provider.specialties_en,
+    phone: provider.phone,
+    description: provider.description,
+    descriptionEn: provider.description_en
+  }));
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -191,11 +146,19 @@ const Index = () => {
   });
 
   const handleChat = (provider) => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
     setSelectedProvider(provider);
     setShowChatModal(true);
   };
 
   const handleBooking = (provider) => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
     setSelectedProvider(provider);
     setShowBookingModal(true);
   };
@@ -203,6 +166,10 @@ const Index = () => {
   const handleProfileView = (provider) => {
     setSelectedProvider(provider);
     setShowProfileModal(true);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   return (
@@ -225,6 +192,23 @@ const Index = () => {
                 {currentTime.toLocaleTimeString('bn-BD')}
               </div>
               
+              {user ? (
+                <div className="flex items-center space-x-3">
+                  <span className="text-sm text-gray-600">
+                    {text[language].welcome}, {user.user_metadata?.full_name || user.email}
+                  </span>
+                  <Button variant="outline" size="sm" onClick={handleSignOut}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    {text[language].logout}
+                  </Button>
+                </div>
+              ) : (
+                <Button variant="default" size="sm" onClick={() => setShowAuthModal(true)}>
+                  <LogIn className="w-4 h-4 mr-2" />
+                  {text[language].login}
+                </Button>
+              )}
+
               {/* Navigation Links */}
               <Link to="/provider-registration">
                 <Button variant="default" size="sm" className="bg-green-600 hover:bg-green-700">
@@ -357,21 +341,32 @@ const Index = () => {
             </div>
 
             {/* Service Providers Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredProviders.map((provider) => (
-                <div key={provider.id} onClick={() => handleProfileView(provider)} className="cursor-pointer">
-                  <ServiceProviderCard
-                    provider={provider}
-                    language={language}
-                    text={text}
-                    onChat={handleChat}
-                    onBook={handleBooking}
-                  />
+            {providersLoading ? (
+              <div className="text-center py-12">
+                <div className="text-gray-400 mb-4">
+                  <Users className="w-16 h-16 mx-auto animate-spin" />
                 </div>
-              ))}
-            </div>
+                <h3 className="text-lg font-medium text-gray-500">
+                  {language === 'bn' ? 'লোড হচ্ছে...' : 'Loading...'}
+                </h3>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredProviders.map((provider) => (
+                  <div key={provider.id} onClick={() => handleProfileView(provider)} className="cursor-pointer">
+                    <ServiceProviderCard
+                      provider={provider}
+                      language={language}
+                      text={text}
+                      onChat={handleChat}
+                      onBook={handleBooking}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
 
-            {filteredProviders.length === 0 && (
+            {!providersLoading && filteredProviders.length === 0 && (
               <div className="text-center py-12">
                 <div className="text-gray-400 mb-4">
                   <Users className="w-16 h-16 mx-auto" />
@@ -387,6 +382,13 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+        language={language} 
+      />
 
       {/* Provider Profile Modal */}
       {showProfileModal && selectedProvider && (
@@ -427,6 +429,8 @@ const Index = () => {
           onClose={() => setShowBookingModal(false)}
         />
       )}
+
+      <Toaster />
     </div>
   );
 };
