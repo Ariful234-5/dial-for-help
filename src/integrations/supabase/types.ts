@@ -15,7 +15,7 @@ export type Database = {
           created_at: string
           customer_id: string
           customer_name: string
-          customer_phone: string
+          customer_phone: number
           description: string | null
           id: string
           provider_id: string
@@ -28,9 +28,9 @@ export type Database = {
         Insert: {
           address: string
           created_at?: string
-          customer_id: string
+          customer_id?: string
           customer_name: string
-          customer_phone: string
+          customer_phone: number
           description?: string | null
           id?: string
           provider_id: string
@@ -45,7 +45,7 @@ export type Database = {
           created_at?: string
           customer_id?: string
           customer_name?: string
-          customer_phone?: string
+          customer_phone?: number
           description?: string | null
           id?: string
           provider_id?: string

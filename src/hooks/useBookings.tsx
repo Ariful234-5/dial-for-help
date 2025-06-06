@@ -29,7 +29,8 @@ export const useBookings = () => {
 
       if (error) throw error;
 
-      setBookings(data || []);
+      // Type assertion to ensure the data matches our expected types
+      setBookings((data || []) as Booking[]);
     } catch (err: any) {
       setError(err.message);
     } finally {
