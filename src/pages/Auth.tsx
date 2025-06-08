@@ -25,6 +25,7 @@ const Auth = () => {
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -64,7 +65,7 @@ const Auth = () => {
     setLoading(true);
     setError('');
 
-    if (!signupEmail || !signupPassword || !confirmPassword) {
+    if (!signupEmail || !signupPassword || !confirmPassword || !fullName) {
       setError('সব ক্ষেত্র পূরণ করুন');
       setLoading(false);
       return;
@@ -83,7 +84,7 @@ const Auth = () => {
     }
 
     try {
-      const result = await signUp(signupEmail, signupPassword);
+      const result = await signUp(signupEmail, signupPassword, fullName);
       if (result.error) {
         if (result.error.message.includes('already registered')) {
           setError('এই ইমেইল দিয়ে ইতিমধ্যে একাউন্ট আছে');
@@ -170,6 +171,21 @@ const Auth = () => {
 
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="full-name">পূর্ণ নাম</Label>
+                  <div className="relative">
+                    <User className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                    <Input
+                      id="full-name"
+                      type="text"
+                      placeholder="আপনার পূর্ণ নাম"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">ইমেইল</Label>
                   <div className="relative">

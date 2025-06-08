@@ -39,7 +39,13 @@ export const useBookings = () => {
 
       if (fetchError) throw fetchError;
 
-      setBookings(data || []);
+      // Type assertion to ensure status field matches our interface
+      const typedBookings = (data || []).map(booking => ({
+        ...booking,
+        status: booking.status as 'pending' | 'confirmed' | 'completed' | 'cancelled'
+      }));
+
+      setBookings(typedBookings);
     } catch (err: any) {
       console.error('Error fetching bookings:', err);
       setError(err.message);
