@@ -23,7 +23,6 @@ export interface ServiceProvider {
   available: boolean;
   verified: boolean;
   distance?: number;
-  status?: string;
   created_at: string;
   updated_at: string;
 }
@@ -65,7 +64,6 @@ export const useServiceProviders = () => {
         available: provider.available ?? true,
         verified: provider.verified ?? false,
         distance: provider.distance,
-        status: provider.status || 'pending',
         created_at: provider.created_at,
         updated_at: provider.updated_at,
       })) || [];
