@@ -7,22 +7,25 @@ export interface ServiceProvider {
   name: string;
   name_en: string;
   category: string;
-  rating: number;
-  reviews_count: number;
-  experience: number;
   location: string;
   location_en: string;
-  distance?: number;
-  image?: string;
-  verified: boolean;
-  available: boolean;
+  experience: number;
+  rating: number;
+  reviews_count?: number;
+  phone: string;
   price: string;
   price_en: string;
-  specialties: string[];
-  specialties_en: string[];
-  phone: string;
+  image?: string;
   description?: string;
   description_en?: string;
+  specialties?: string[];
+  specialties_en?: string[];
+  available: boolean;
+  verified: boolean;
+  distance?: number;
+  status?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export const useServiceProviders = () => {
@@ -33,18 +36,66 @@ export const useServiceProviders = () => {
   const fetchProviders = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      const { data, error: fetchError } = await supabase
         .from('service_providers')
         .select('*')
-        .order('rating', { ascending: false });
+        .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
 
-      setProviders(data || []);
+      const transformedProviders: ServiceProvider[] = data?.map(provider => ({
+        id: provider.id,
+        name: provider.name,
+        name_en: provider.name_en,
+        category: provider.category,
+        location: provider.location,
+        location_en: provider.location_en,
+        experience: provider.experience,
+        rating: provider.rating || 0,
+        reviews_count: provider.reviews_count || 0,
+        phone: provider.phone,
+        price: provider.price,
+        price_en: provider.price_en,
+        image: provider.image,
+        description: provider.description,
+        description_en: provider.description_en,
+        specialties: provider.specialties || [],
+        specialties_en: provider.specialties_en || [],
+        available: provider.available ?? true,
+        verified: provider.verified ?? false,
+        distance: provider.distance,
+        status: provider.status || 'pending',
+        created_at: provider.created_at,
+        updated_at: provider.updated_at,
+      })) || [];
+
+      setProviders(transformedProviders);
     } catch (err: any) {
+      console.error('Error fetching service providers:', err);
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateProviderStatus = async (providerId: string, verified: boolean) => {
+    try {
+      const { error: updateError } = await supabase
+        .from('service_providers')
+        .update({ verified })
+        .eq('id', providerId);
+
+      if (updateError) throw updateError;
+
+      setProviders(prev => prev.map(provider => 
+        provider.id === providerId ? { ...provider, verified } : provider
+      ));
+
+      return { success: true };
+    } catch (err: any) {
+      console.error('Error updating provider status:', err);
+      return { success: false, error: err.message };
     }
   };
 
@@ -56,6 +107,7 @@ export const useServiceProviders = () => {
     providers,
     loading,
     error,
+    updateProviderStatus,
     refetch: fetchProviders,
   };
 };

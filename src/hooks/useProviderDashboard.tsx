@@ -1,9 +1,23 @@
 
 import { useState, useEffect } from 'react';
-import { Tables } from '@/integrations/supabase/types';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
 
-type Booking = Tables<'bookings'>;
-type ServiceProvider = Tables<'service_providers'>;
+interface Booking {
+  id: string;
+  customer_name: string;
+  customer_phone: number;
+  address: string;
+  selected_date: string;
+  selected_time: string;
+  status: string;
+  provider_id: string;
+  customer_id: string;
+  description?: string;
+  total_price?: number;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface ProviderStats {
   totalBookings: number;
@@ -15,13 +29,14 @@ export interface ProviderStats {
 }
 
 export const useProviderDashboard = (providerId?: string) => {
+  const { user } = useAuth();
   const [stats, setStats] = useState<ProviderStats>({
-    totalBookings: 156,
-    completedJobs: 142,
-    pendingBookings: 8,
-    totalEarnings: 45000,
-    averageRating: 4.8,
-    responseTime: 15
+    totalBookings: 0,
+    completedJobs: 0,
+    pendingBookings: 0,
+    totalEarnings: 0,
+    averageRating: 0,
+    responseTime: 0
   });
   
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
@@ -29,45 +44,47 @@ export const useProviderDashboard = (providerId?: string) => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchDashboardData = async () => {
+    if (!user || !providerId) return;
+
     try {
       setLoading(true);
       
-      // Create mock recent bookings
-      const mockBookings: Booking[] = [
-        {
-          id: '1',
-          customer_name: 'আহমেদ আলী',
-          customer_phone: 1234567890,
-          address: 'ধানমন্ডি, ঢাকা',
-          selected_date: '2024-01-20',
-          selected_time: '১০:০০ AM',
-          status: 'pending',
-          provider_id: providerId || '1',
-          customer_id: '1',
-          description: 'ইলেকট্রিক্যাল সমস্যা সমাধান',
-          total_price: 1500,
-          created_at: '2024-01-18T10:00:00Z',
-          updated_at: '2024-01-18T10:00:00Z'
-        },
-        {
-          id: '2',
-          customer_name: 'ফাতেমা খাতুন',
-          customer_phone: 1234567891,
-          address: 'গুলশান, ঢাকা',
-          selected_date: '2024-01-19',
-          selected_time: '২:০০ PM',
-          status: 'confirmed',
-          provider_id: providerId || '1',
-          customer_id: '2',
-          description: 'ফ্যান ইনস্টলেশন',
-          total_price: 800,
-          created_at: '2024-01-17T14:00:00Z',
-          updated_at: '2024-01-17T14:00:00Z'
-        }
-      ];
+      // Get all bookings for this provider
+      const { data: bookings, error: bookingsError } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('provider_id', providerId)
+        .order('created_at', { ascending: false });
+
+      if (bookingsError) throw bookingsError;
+
+      // Get provider rating
+      const { data: providerData, error: providerError } = await supabase
+        .from('service_providers')
+        .select('rating')
+        .eq('id', providerId)
+        .single();
+
+      if (providerError) throw providerError;
+
+      const totalBookings = bookings?.length || 0;
+      const completedJobs = bookings?.filter(b => b.status === 'completed').length || 0;
+      const pendingBookings = bookings?.filter(b => b.status === 'pending' || b.status === 'confirmed').length || 0;
+      const totalEarnings = bookings?.reduce((sum, booking) => sum + (booking.total_price || 0), 0) || 0;
+
+      setStats({
+        totalBookings,
+        completedJobs,
+        pendingBookings,
+        totalEarnings,
+        averageRating: providerData?.rating || 0,
+        responseTime: 15 // Mock data
+      });
+
+      setRecentBookings(bookings || []);
       
-      setRecentBookings(mockBookings);
     } catch (err: any) {
+      console.error('Error fetching dashboard data:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -76,6 +93,13 @@ export const useProviderDashboard = (providerId?: string) => {
 
   const updateBookingStatus = async (bookingId: string, status: 'pending' | 'confirmed' | 'completed' | 'cancelled') => {
     try {
+      const { error: updateError } = await supabase
+        .from('bookings')
+        .update({ status })
+        .eq('id', bookingId);
+
+      if (updateError) throw updateError;
+
       setRecentBookings(prev => prev.map(booking => 
         booking.id === bookingId ? { ...booking, status } : booking
       ));
@@ -91,13 +115,14 @@ export const useProviderDashboard = (providerId?: string) => {
       
       return { success: true };
     } catch (err: any) {
+      console.error('Error updating booking status:', err);
       return { success: false, error: err.message };
     }
   };
 
   useEffect(() => {
     fetchDashboardData();
-  }, [providerId]);
+  }, [user, providerId]);
 
   return {
     stats,
