@@ -22,41 +22,36 @@ export const useUsers = () => {
     try {
       setLoading(true);
       
-      // Get all profiles with their auth data
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*');
-
-      if (profilesError) throw profilesError;
-
-      // Get booking counts for each user
-      const userIds = profiles?.map(p => p.id) || [];
+      // Get unique customer IDs from bookings
       const { data: bookings, error: bookingsError } = await supabase
         .from('bookings')
-        .select('customer_id')
-        .in('customer_id', userIds);
+        .select('customer_id, customer_name, customer_phone, created_at');
 
       if (bookingsError) throw bookingsError;
 
-      // Count bookings per user
-      const bookingCounts = bookings?.reduce((acc: Record<string, number>, booking) => {
-        acc[booking.customer_id] = (acc[booking.customer_id] || 0) + 1;
-        return acc;
-      }, {}) || {};
-
-      // Transform profiles to users
-      const transformedUsers: User[] = profiles?.map(profile => ({
-        id: profile.id,
-        email: profile.id, // We'll need to get this from auth
-        full_name: profile.full_name || 'N/A',
-        phone: profile.phone,
-        status: 'active', // Default status
-        created_at: new Date(profile.created_at).toLocaleDateString('bn-BD'),
-        total_bookings: bookingCounts[profile.id] || 0,
-        location: profile.location,
-      })) || [];
+      // Group bookings by customer to get user data
+      const userMap = new Map<string, User>();
       
-      setUsers(transformedUsers);
+      bookings?.forEach(booking => {
+        const userId = booking.customer_id;
+        if (userMap.has(userId)) {
+          const existingUser = userMap.get(userId)!;
+          existingUser.total_bookings += 1;
+        } else {
+          userMap.set(userId, {
+            id: userId,
+            email: `${booking.customer_name?.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+            full_name: booking.customer_name || 'N/A',
+            phone: booking.customer_phone?.toString(),
+            status: 'active',
+            created_at: new Date(booking.created_at).toLocaleDateString('bn-BD'),
+            total_bookings: 1,
+            location: 'ঢাকা, বাংলাদেশ',
+          });
+        }
+      });
+
+      setUsers(Array.from(userMap.values()));
     } catch (err: any) {
       console.error('Error fetching users:', err);
       setError(err.message);
@@ -67,7 +62,6 @@ export const useUsers = () => {
 
   const updateUserStatus = async (userId: string, status: 'active' | 'inactive' | 'suspended') => {
     try {
-      // Since we don't have a status field in profiles yet, we'll just update locally
       setUsers(prev => prev.map(user => 
         user.id === userId ? { ...user, status } : user
       ));

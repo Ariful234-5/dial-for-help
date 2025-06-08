@@ -34,12 +34,16 @@ export const useAnalytics = () => {
     try {
       setLoading(true);
 
-      // Get total users count
-      const { count: totalUsers, error: usersError } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
+      // Get unique users count from bookings
+      const { data: bookingsData, error: bookingsError } = await supabase
+        .from('bookings')
+        .select('customer_id, total_price, status');
 
-      if (usersError) throw usersError;
+      if (bookingsError) throw bookingsError;
+
+      // Get unique customer count
+      const uniqueCustomers = new Set(bookingsData?.map(b => b.customer_id) || []);
+      const totalUsers = uniqueCustomers.size;
 
       // Get active providers count
       const { count: activeProviders, error: providersError } = await supabase
@@ -58,11 +62,7 @@ export const useAnalytics = () => {
       if (pendingError) throw pendingError;
 
       // Get total bookings count
-      const { count: totalBookings, error: bookingsError } = await supabase
-        .from('bookings')
-        .select('*', { count: 'exact', head: true });
-
-      if (bookingsError) throw bookingsError;
+      const totalBookings = bookingsData?.length || 0;
 
       // Get average rating
       const { data: ratingsData, error: ratingsError } = await supabase
@@ -75,18 +75,22 @@ export const useAnalytics = () => {
         ? ratingsData.reduce((sum, provider) => sum + (provider.rating || 0), 0) / ratingsData.length
         : 0;
 
-      // Calculate total revenue (mock calculation based on bookings)
-      const totalRevenue = (totalBookings || 0) * 1200; // Average booking price
+      // Calculate total revenue from bookings
+      const totalRevenue = bookingsData?.reduce((sum, booking) => sum + (booking.total_price || 0), 0) || 0;
+
+      // Calculate completion rate
+      const completedBookings = bookingsData?.filter(b => b.status === 'completed').length || 0;
+      const completionRate = totalBookings > 0 ? (completedBookings / totalBookings) * 100 : 0;
 
       setAnalytics({
-        totalUsers: totalUsers || 0,
+        totalUsers,
         activeProviders: activeProviders || 0,
         pendingApprovals: pendingApprovals || 0,
         totalRevenue,
         monthlyGrowth: 15.2, // Mock data
         avgRating: parseFloat(avgRating.toFixed(1)),
-        totalBookings: totalBookings || 0,
-        completionRate: 94.5, // Mock data
+        totalBookings,
+        completionRate: parseFloat(completionRate.toFixed(1)),
         responseTime: 12 // Mock data
       });
 
