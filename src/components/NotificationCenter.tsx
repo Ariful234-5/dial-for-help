@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bell, Check, CheckCheck, X } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
-import { formatDistanceToNow } from 'date-fns';
 
 interface NotificationCenterProps {
   isOpen: boolean;
@@ -94,7 +93,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
                           {notification.message}
                         </p>
                         <p className="text-xs text-gray-400 mt-2">
-                          {notification.createdAt}
+                          {new Date(notification.created_at).toLocaleString('bn-BD')}
                         </p>
                       </div>
                     </div>
