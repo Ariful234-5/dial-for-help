@@ -56,30 +56,31 @@ const ApprovalSystem = () => {
           ) : (
             <div className="space-y-4">
               {pendingProviders.map((provider) => (
-                <div key={provider.id} className="p-4 border rounded-lg hover:bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
+                <div key={provider.id} className="p-3 md:p-4 border rounded-lg hover:bg-gray-50">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between space-y-3 md:space-y-0">
+                    <div className="flex items-center space-x-3 md:space-x-4">
                       <img
                         src={provider.image || "/placeholder.svg"}
                         alt={provider.name}
-                        className="w-12 h-12 rounded-full object-cover"
+                        className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover"
                       />
-                      <div>
-                        <h3 className="font-semibold">{provider.name}</h3>
-                        <p className="text-sm text-gray-600">{provider.category}</p>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold text-sm md:text-base truncate">{provider.name}</h3>
+                        <p className="text-xs md:text-sm text-gray-600">{provider.category}</p>
                         <div className="flex items-center text-xs text-gray-500 mt-1">
                           <MapPin className="w-3 h-3 mr-1" />
-                          {provider.location}
-                          <span className="mx-2">•</span>
-                          {provider.experience} বছর অভিজ্ঞতা
+                          <span className="truncate">{provider.location}</span>
+                          <span className="mx-2 hidden sm:inline">•</span>
+                          <span className="hidden sm:inline">{provider.experience} বছর</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => viewDetails(provider)}
+                        className="flex-1 sm:flex-none"
                       >
                         <Eye className="w-4 h-4 mr-1" />
                         বিস্তারিত
@@ -87,7 +88,7 @@ const ApprovalSystem = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="text-green-600 hover:bg-green-50"
+                        className="text-green-600 hover:bg-green-50 flex-1 sm:flex-none"
                         onClick={() => handleApproval(provider.id, true)}
                       >
                         <CheckCircle className="w-4 h-4 mr-1" />
@@ -96,7 +97,7 @@ const ApprovalSystem = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="text-red-600 hover:bg-red-50"
+                        className="text-red-600 hover:bg-red-50 flex-1 sm:flex-none"
                         onClick={() => handleApproval(provider.id, false)}
                       >
                         <XCircle className="w-4 h-4 mr-1" />
@@ -113,22 +114,22 @@ const ApprovalSystem = () => {
 
       {/* Provider Details Modal */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>প্রদানকারীর বিস্তারিত তথ্য</DialogTitle>
           </DialogHeader>
           {selectedProvider && (
             <div className="space-y-6">
-              <div className="flex items-center space-x-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
                 <img
                   src={selectedProvider.image || "/placeholder.svg"}
                   alt={selectedProvider.name}
-                  className="w-20 h-20 rounded-full object-cover"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover mx-auto sm:mx-0"
                 />
-                <div>
+                <div className="text-center sm:text-left">
                   <h2 className="text-xl font-semibold">{selectedProvider.name}</h2>
                   <p className="text-gray-600">{selectedProvider.name_en}</p>
-                  <div className="flex items-center mt-2">
+                  <div className="flex items-center justify-center sm:justify-start mt-2">
                     <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                     <span className="ml-1 text-sm">{selectedProvider.rating}</span>
                     <span className="mx-2">•</span>
@@ -178,7 +179,7 @@ const ApprovalSystem = () => {
                 </div>
               )}
 
-              <div className="flex space-x-3 pt-4">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-4">
                 <Button
                   className="flex-1 text-green-600 hover:bg-green-50"
                   variant="outline"
