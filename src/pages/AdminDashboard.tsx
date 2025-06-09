@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RefreshCw, Settings, Shield, Users, BarChart3, FileText } from 'lucide-react';
+import { RefreshCw, Settings, Shield, Users, BarChart3, FileText, Briefcase, DollarSign } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useServiceProviders } from "@/hooks/useServiceProviders";
 import { useUsers } from "@/hooks/useUsers";
